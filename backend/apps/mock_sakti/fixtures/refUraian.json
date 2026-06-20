@@ -1,0 +1,77 @@
+[
+  {
+    "jenis": "program",
+    "kode": "054.01.WA",
+    "uraian": "Program Pembangunan Infrastruktur IKN"
+  },
+  {
+    "jenis": "program",
+    "kode": "054.01.WB",
+    "uraian": "Program Perencanaan dan Tata Kelola IKN"
+  },
+  {
+    "jenis": "kegiatan",
+    "kode": "1001",
+    "uraian": "Dukungan Manajemen dan Pelaksanaan Tugas Teknis Lainnya"
+  },
+  {
+    "jenis": "kegiatan",
+    "kode": "1002",
+    "uraian": "Pembangunan Infrastruktur Fisik IKN"
+  },
+  {
+    "jenis": "kegiatan",
+    "kode": "2001",
+    "uraian": "Perencanaan dan Pengawasan Pembangunan IKN"
+  },
+  {
+    "jenis": "output",
+    "kode": "001",
+    "uraian": "Layanan Dukungan Manajemen Satker"
+  },
+  {
+    "jenis": "output",
+    "kode": "002",
+    "uraian": "Layanan Sarana dan Prasarana Internal"
+  },
+  {
+    "jenis": "sub_output",
+    "kode": "001",
+    "uraian": "Sub-Output Utama"
+  },
+  {
+    "jenis": "komponen",
+    "kode": "001",
+    "uraian": "Komponen Utama"
+  },
+  {
+    "jenis": "komponen",
+    "kode": "002",
+    "uraian": "Komponen Pendukung"
+  },
+  {
+    "jenis": "akun",
+    "kode": "521111",
+    "uraian": "Belanja Keperluan Perkantoran"
+  },
+  {
+    "jenis": "akun",
+    "kode": "521211",
+    "uraian": "Belanja Jasa"
+  },
+  {
+    "jenis": "akun",
+    "kode": "522111",
+    "uraian": "Belanja Langganan Daya dan Jasa"
+  },
+  {
+    "jenis": "akun",
+    "kode": "533111",
+    "uraian": "Belanja Modal Jalan dan Jembatan"
+  },
+  {
+    "jenis": "akun",
+    "kode": "533121",
+    "uraian": "Belanja Modal Gedung dan Bangunan"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "kd_satker": "999001",
+    "nm_satker": "Satker Sekretariat OIKN",
+    "kd_kppn": "019"
+  },
+  {
+    "kd_satker": "999002",
+    "nm_satker": "Satker Bidang Infrastruktur Dasar",
+    "kd_kppn": "019"
+  },
+  {
+    "kd_satker": "999003",
+    "nm_satker": "Satker Bidang Infrastruktur Sosial",
+    "kd_kppn": "019"
+  },
+  {
+    "kd_satker": "999004",
+    "nm_satker": "Satker Bidang Tata Kelola",
+    "kd_kppn": "019"
+  },
+  {
+    "kd_satker": "999005",
+    "nm_satker": "Satker Bidang Ekonomi dan Investasi",
+    "kd_kppn": "019"
+  },
+  {
+    "kd_satker": "999006",
+    "nm_satker": "Satker Bidang Lingkungan Hidup",
+    "kd_kppn": "019"
+  }
+]

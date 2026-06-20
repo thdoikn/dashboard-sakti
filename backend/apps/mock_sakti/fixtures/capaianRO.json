@@ -1,0 +1,98 @@
+[
+  {
+    "kd_sub_output": "054.01.WA.1001.001.001",
+    "kd_periode": "2026-01",
+    "total_realisasi": "49000000",
+    "total_progress": 3.2,
+    "anggaran_belanja": "800000000",
+    "realisasi_belanja": "49000000"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1001.001.001",
+    "kd_periode": "2026-02",
+    "total_realisasi": "122500000",
+    "total_progress": 8.5,
+    "anggaran_belanja": "800000000",
+    "realisasi_belanja": "122500000"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1001.001.001",
+    "kd_periode": "2026-03",
+    "total_realisasi": "240500000",
+    "total_progress": 16.2,
+    "anggaran_belanja": "800000000",
+    "realisasi_belanja": "240500000"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1001.001.001",
+    "kd_periode": "2026-04",
+    "total_realisasi": "436500000",
+    "total_progress": 28.9,
+    "anggaran_belanja": "800000000",
+    "realisasi_belanja": "436500000"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1002.001.001",
+    "kd_periode": "2026-01",
+    "total_realisasi": "0",
+    "total_progress": 0.0,
+    "anggaran_belanja": "245000000000",
+    "realisasi_belanja": "0"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1002.001.001",
+    "kd_periode": "2026-02",
+    "total_realisasi": "0",
+    "total_progress": 0.0,
+    "anggaran_belanja": "245000000000",
+    "realisasi_belanja": "0"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1002.001.001",
+    "kd_periode": "2026-03",
+    "total_realisasi": "118000000",
+    "total_progress": 0.6,
+    "anggaran_belanja": "245000000000",
+    "realisasi_belanja": "118000000"
+  },
+  {
+    "kd_sub_output": "054.01.WA.1002.001.001",
+    "kd_periode": "2026-04",
+    "total_realisasi": "314000000",
+    "total_progress": 1.4,
+    "anggaran_belanja": "245000000000",
+    "realisasi_belanja": "314000000"
+  },
+  {
+    "kd_sub_output": "054.01.WB.2001.001.001",
+    "kd_periode": "2026-01",
+    "total_realisasi": "0",
+    "total_progress": 0.0,
+    "anggaran_belanja": "5000000000",
+    "realisasi_belanja": "0"
+  },
+  {
+    "kd_sub_output": "054.01.WB.2001.001.001",
+    "kd_periode": "2026-02",
+    "total_realisasi": "0",
+    "total_progress": 0.0,
+    "anggaran_belanja": "5000000000",
+    "realisasi_belanja": "0"
+  },
+  {
+    "kd_sub_output": "054.01.WB.2001.001.001",
+    "kd_periode": "2026-03",
+    "total_realisasi": "0",
+    "total_progress": 0.0,
+    "anggaran_belanja": "5000000000",
+    "realisasi_belanja": "0"
+  },
+  {
+    "kd_sub_output": "054.01.WB.2001.001.001",
+    "kd_periode": "2026-04",
+    "total_realisasi": "75000000",
+    "total_progress": 15.5,
+    "anggaran_belanja": "5000000000",
+    "realisasi_belanja": "75000000"
+  }
+]
