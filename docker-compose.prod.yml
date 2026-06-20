@@ -80,6 +80,39 @@ services:
     networks:
       - sakti_network
 
+  airflow-init:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: sakti_airflow_init
+    environment:
+      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
+      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
+      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - ./backend:/opt/django_app:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username $$AIRFLOW_ADMIN_USER --firstname Admin --lastname User
+                 --role Admin --email admin@oikn.go.id --password $$AIRFLOW_ADMIN_PASSWORD || true"
+    restart: on-failure
+    networks:
+      - sakti_network
+
   airflow-webserver:
     build:
       context: ./airflow
@@ -102,22 +135,20 @@ services:
       AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     volumes:
+      - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
+      - ./backend:/opt/django_app:ro
     ports:
       - "8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
-    command: >
-      bash -c "airflow db migrate &&
-               airflow users create --username $$AIRFLOW_ADMIN_USER --firstname Admin --lastname User
-                 --role Admin --email admin@oikn.go.id --password $$AIRFLOW_ADMIN_PASSWORD || true &&
-               airflow webserver"
+    command: airflow webserver
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 120s
     networks:
       - sakti_network
@@ -142,7 +173,9 @@ services:
       SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
       SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
     volumes:
+      - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
+      - ./backend:/opt/django_app:ro
     depends_on:
       mysql:
         condition: service_healthy

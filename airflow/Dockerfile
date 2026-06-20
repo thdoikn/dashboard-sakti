@@ -21,6 +21,6 @@ USER airflow
 COPY requirements.txt /requirements-extra.txt
 RUN pip install --no-cache-dir -r /requirements-extra.txt
 
-# Mount point for the Django app code (shared via volume in compose)
-# The path /opt/django_app must be on PYTHONPATH so Django imports work in DAG tasks
-ENV PYTHONPATH="/opt/django_app:${PYTHONPATH}"
+# Mount point for the Django backend code (shared via volume in compose at /opt/django_app)
+# PYTHONPATH makes Django ORM and sakti_client importable inside DAG tasks (Option A per CLAUDE.md)
+ENV PYTHONPATH="/opt/django_app:/opt/airflow/backend:${PYTHONPATH}"

@@ -27,7 +27,7 @@ FROM python:${PYTHON_VERSION}-slim AS runtime
 
 WORKDIR /app
 
-# Runtime deps for mysqlclient
+# Runtime deps for mysqlclient (libmysqlclient only, not -dev headers)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
     curl \
@@ -38,7 +38,10 @@ RUN pip install --no-cache /wheels/*
 
 COPY . .
 
-# Collect static files
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
+
+# Collect static files (non-fatal — settings may not be complete at build time)
 RUN python manage.py collectstatic --noinput --settings=config.settings.production || true
 
 EXPOSE 8000
@@ -59,6 +62,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
+
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=config.settings.development
 
 EXPOSE 8000
 
