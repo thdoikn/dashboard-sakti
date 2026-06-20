@@ -1,0 +1,159 @@
+version: "3.9"
+
+# Production docker-compose — no source volume mounts, pre-built images, restart policies
+# Note: No application-level authentication — access restricted at OIKN network level.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sakti_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: sakti_data
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - sakti_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sakti_backend
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
+      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
+      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
+      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --settings=config.settings.production &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - sakti_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sakti_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - sakti_network
+
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: sakti_airflow_webserver
+    restart: unless-stopped
+    environment:
+      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
+      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
+      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
+      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
+      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    volumes:
+      - airflow_logs:/opt/airflow/logs
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username $$AIRFLOW_ADMIN_USER --firstname Admin --lastname User
+                 --role Admin --email admin@oikn.go.id --password $$AIRFLOW_ADMIN_PASSWORD || true &&
+               airflow webserver"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - sakti_network
+
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: sakti_airflow_scheduler
+    restart: unless-stopped
+    environment:
+      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
+      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
+      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
+      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
+    volumes:
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: airflow scheduler
+    networks:
+      - sakti_network
+
+volumes:
+  mysql_data:
+  airflow_logs:
+
+networks:
+  sakti_network:
+    driver: bridge
