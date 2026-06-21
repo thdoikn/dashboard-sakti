@@ -28,6 +28,7 @@ export default function SatkerDetail() {
   const [satkerList,     setSatkerList]     = useState([])
   const [selectedSatker, setSelectedSatker] = useState('')
   const [tahun,          setTahun]          = useState(2026)
+  const [granularity,    setGranularity]    = useState('monthly')
   const [anggaran,       setAnggaran]       = useState([])
   const [realisasi,      setRealisasi]      = useState([])
   const [capaian,        setCapaian]        = useState([])
@@ -61,17 +62,20 @@ export default function SatkerDetail() {
   const totalRealisasi = realisasi.reduce((s, r)  => s + parseFloat(r.nilai_sp2d  ?? 0), 0)
   const persen         = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
 
-  const monthlyMap = {}
+  // Group realisasi by period based on selected granularity
+  const groupedMap = {}
   realisasi.forEach((r) => {
     if (!r.tgl_sp2d) return
-    const m = r.tgl_sp2d.slice(0, 7)
-    monthlyMap[m] = (monthlyMap[m] || 0) + parseFloat(r.nilai_sp2d || 0)
+    const key = granularity === 'monthly' ? r.tgl_sp2d.slice(0, 7) : r.tgl_sp2d.slice(0, 10)
+    groupedMap[key] = (groupedMap[key] || 0) + parseFloat(r.nilai_sp2d || 0)
   })
-  const chartData = Object.entries(monthlyMap).sort().map(([period, val]) => ({
+  const periodsInYear     = granularity === 'monthly' ? 12 : 365
+  const anggaranPerPeriod = totalAnggaran / periodsInYear
+  const chartData = Object.entries(groupedMap).sort(([a], [b]) => a.localeCompare(b)).map(([period, val]) => ({
     period,
-    anggaran: totalAnggaran / 12,
+    anggaran: anggaranPerPeriod,
     realisasi: val,
-    persen_serapan: totalAnggaran > 0 ? (val / (totalAnggaran / 12)) * 100 : 0,
+    persen_serapan: anggaranPerPeriod > 0 ? (val / anggaranPerPeriod) * 100 : 0,
   }))
 
   const satkerNama = satkerList.find((s) => s.id === selectedSatker)?.nama_satker ?? ''
@@ -162,9 +166,29 @@ export default function SatkerDetail() {
             {/* Chart + Gauge */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
               <div className="lg:col-span-3 ikn-card p-6">
-                <div className="mb-5">
-                  <h2 className="font-bold text-ikn-dark">Tren Realisasi</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">{satkerNama}</p>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="font-bold text-ikn-dark">Tren Realisasi</h2>
+                    <p className="text-xs text-gray-400 mt-0.5">{satkerNama}</p>
+                  </div>
+                  <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+                    {[
+                      { key: 'monthly', label: 'Bulanan' },
+                      { key: 'daily',   label: 'Harian'  },
+                    ].map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setGranularity(key)}
+                        className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
+                          granularity === key
+                            ? 'bg-ikn-blue text-white shadow-sm'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <DisbursementChart data={chartData} />
               </div>

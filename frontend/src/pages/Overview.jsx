@@ -46,20 +46,23 @@ export default function Overview() {
   const totalRealisasi = realisasi.reduce((s, r) => s + parseFloat(r.nilai_sp2d ?? 0), 0)
   const persen         = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
 
-  const monthlyMap = {}
+  // Group realisasi by period based on selected granularity
+  const groupedMap = {}
   realisasi.forEach((r) => {
     if (!r.tgl_sp2d) return
-    const month = r.tgl_sp2d.slice(0, 7)
-    monthlyMap[month] = (monthlyMap[month] || 0) + parseFloat(r.nilai_sp2d || 0)
+    const key = granularity === 'monthly' ? r.tgl_sp2d.slice(0, 7) : r.tgl_sp2d.slice(0, 10)
+    groupedMap[key] = (groupedMap[key] || 0) + parseFloat(r.nilai_sp2d || 0)
   })
-  const anggaranPerMonth = totalAnggaran / 12
-  const chartData = Object.entries(monthlyMap)
+  // Divide annual budget equally across periods (12 months or 365 days)
+  const periodsInYear   = granularity === 'monthly' ? 12 : 365
+  const anggaranPerPeriod = totalAnggaran / periodsInYear
+  const chartData = Object.entries(groupedMap)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([period, realisasiVal]) => ({
       period,
-      anggaran: anggaranPerMonth,
+      anggaran: anggaranPerPeriod,
       realisasi: realisasiVal,
-      persen_serapan: anggaranPerMonth > 0 ? (realisasiVal / anggaranPerMonth) * 100 : 0,
+      persen_serapan: anggaranPerPeriod > 0 ? (realisasiVal / anggaranPerPeriod) * 100 : 0,
     }))
 
   return (
