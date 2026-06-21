@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react'
+import {
+  BanknotesIcon,
+  ArrowTrendingUpIcon,
+  ChartPieIcon,
+  FunnelIcon,
+} from '@heroicons/react/24/outline'
 import { getSatkerList } from '../api/satker'
 import { getAnggaran, getRealisasi, getCapaianRO } from '../api/anggaran'
 import ExportButton from '../components/ExportButton'
 import DisbursementChart from '../components/charts/DisbursementChart'
+import AbsorptionGauge from '../components/charts/AbsorptionGauge'
 
 const formatIDR = (val) =>
   new Intl.NumberFormat('id-ID', {
@@ -12,18 +19,23 @@ const formatIDR = (val) =>
     maximumFractionDigits: 1,
   }).format(val)
 
+const formatIDRFull = (val) =>
+  new Intl.NumberFormat('id-ID').format(parseFloat(val || 0))
+
+const YEARS = [2024, 2025, 2026]
+
 export default function SatkerDetail() {
-  const [satkerList, setSatkerList] = useState([])
+  const [satkerList,     setSatkerList]     = useState([])
   const [selectedSatker, setSelectedSatker] = useState('')
-  const [tahun, setTahun] = useState(2026)
-  const [anggaran, setAnggaran] = useState([])
-  const [realisasi, setRealisasi] = useState([])
-  const [capaian, setCapaian] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [tahun,          setTahun]          = useState(2026)
+  const [anggaran,       setAnggaran]       = useState([])
+  const [realisasi,      setRealisasi]      = useState([])
+  const [capaian,        setCapaian]        = useState([])
+  const [loading,        setLoading]        = useState(false)
 
   useEffect(() => {
     getSatkerList({ aktif: true }).then((res) => {
-      const list = res.data.results || res.data
+      const list = res.data.results ?? res.data
       setSatkerList(list)
       if (list.length > 0) setSelectedSatker(list[0].id)
     })
@@ -38,17 +50,17 @@ export default function SatkerDetail() {
       getCapaianRO({ satker: selectedSatker }),
     ])
       .then(([a, r, c]) => {
-        setAnggaran(a.data.results || a.data)
-        setRealisasi(r.data.results || r.data)
-        setCapaian(c.data.results || c.data)
+        setAnggaran(a.data.results ?? a.data)
+        setRealisasi(r.data.results ?? r.data)
+        setCapaian(c.data.results ?? c.data)
       })
       .finally(() => setLoading(false))
   }, [selectedSatker, tahun])
 
-  const totalAnggaran = anggaran.reduce((s, a) => s + parseFloat(a.total || 0), 0)
-  const totalRealisasi = realisasi.reduce((s, r) => s + parseFloat(r.nilai_sp2d || 0), 0)
+  const totalAnggaran  = anggaran.reduce((s, a)  => s + parseFloat(a.total       ?? 0), 0)
+  const totalRealisasi = realisasi.reduce((s, r)  => s + parseFloat(r.nilai_sp2d  ?? 0), 0)
+  const persen         = totalAnggaran > 0 ? (totalRealisasi / totalAnggaran) * 100 : 0
 
-  // Build chart data grouped by month
   const monthlyMap = {}
   realisasi.forEach((r) => {
     if (!r.tgl_sp2d) return
@@ -62,90 +74,160 @@ export default function SatkerDetail() {
     persen_serapan: totalAnggaran > 0 ? (val / (totalAnggaran / 12)) * 100 : 0,
   }))
 
-  const satkerNama = satkerList.find((s) => s.id === selectedSatker)?.nama_satker || ''
+  const satkerNama = satkerList.find((s) => s.id === selectedSatker)?.nama_satker ?? ''
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Detail Satker</h2>
-        <ExportButton params={{ satker: selectedSatker, tahun_anggaran: tahun }} label="Export Excel" />
+    <div className="flex flex-col min-h-screen">
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-10">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
+              <span className="text-ikn-blue font-semibold">SAKTI</span>
+              <span>/</span>
+              <span>Detail Satker</span>
+            </div>
+            <h1 className="text-xl font-extrabold text-ikn-dark leading-tight">Detail Satker</h1>
+          </div>
+          <ExportButton params={{ satker: selectedSatker, tahun_anggaran: tahun }} />
+        </div>
       </div>
 
-      <div className="flex gap-3">
-        <select
-          value={selectedSatker}
-          onChange={(e) => setSelectedSatker(Number(e.target.value))}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-        >
-          {satkerList.map((s) => (
-            <option key={s.id} value={s.id}>{s.nama_satker}</option>
-          ))}
-        </select>
-        <select
-          value={tahun}
-          onChange={(e) => setTahun(Number(e.target.value))}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-        >
-          {[2024, 2025, 2026].map((y) => <option key={y}>{y}</option>)}
-        </select>
+      {/* Filters */}
+      <div className="bg-white border-b border-gray-100 px-8 py-3.5">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <FunnelIcon className="w-3.5 h-3.5" />
+            Filter
+          </div>
+
+          <select
+            value={selectedSatker}
+            onChange={(e) => setSelectedSatker(Number(e.target.value))}
+            className="ikn-select min-w-[220px]"
+          >
+            {satkerList.map((s) => (
+              <option key={s.id} value={s.id}>{s.nama_satker}</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl">
+            {YEARS.map((y) => (
+              <button
+                key={y}
+                onClick={() => setTahun(y)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  tahun === y
+                    ? 'bg-ikn-blue text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="py-16 text-center text-gray-400">Memuat data...</div>
-      ) : (
-        <>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-              <p className="text-sm text-blue-700 font-medium">Total Anggaran</p>
-              <p className="text-xl font-bold text-blue-800 mt-1">{formatIDR(totalAnggaran)}</p>
-            </div>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-              <p className="text-sm text-green-700 font-medium">Total Realisasi</p>
-              <p className="text-xl font-bold text-green-800 mt-1">{formatIDR(totalRealisasi)}</p>
-            </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
-              <p className="text-sm text-orange-700 font-medium">Serapan</p>
-              <p className="text-xl font-bold text-orange-800 mt-1">
-                {totalAnggaran > 0 ? ((totalRealisasi / totalAnggaran) * 100).toFixed(1) : '0.0'}%
-              </p>
+      {/* Content */}
+      <div className="flex-1 px-8 py-6 space-y-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-3 text-gray-300">
+              <div className="w-10 h-10 border-2 border-ikn-blue-soft border-t-ikn-blue rounded-full animate-spin" />
+              <span className="text-sm text-gray-400">Memuat data satker...</span>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="font-semibold text-gray-800 mb-4">Tren Realisasi — {satkerNama}</h3>
-            <DisbursementChart data={chartData} />
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Detail Anggaran per Output</h3>
+        ) : (
+          <>
+            {/* KPI cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { title: 'Total Anggaran',  value: formatIDR(totalAnggaran),  bg: 'bg-ikn-blue-light',  ic: 'text-ikn-blue',     Icon: BanknotesIcon },
+                { title: 'Total Realisasi', value: formatIDR(totalRealisasi), bg: 'bg-ikn-green-light', ic: 'text-ikn-green',    Icon: ArrowTrendingUpIcon },
+                { title: 'Serapan',         value: `${persen.toFixed(1)}%`,   bg: 'bg-ikn-gold-light',  ic: 'text-ikn-gold-dark',Icon: ChartPieIcon },
+              ].map(({ title, value, bg, ic, Icon }) => (
+                <div key={title} className="ikn-card p-5 flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+                    <Icon className={`w-6 h-6 ${ic}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{title}</p>
+                    <p className="text-xl font-extrabold text-ikn-dark mt-0.5">{value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">Kode Item</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">Uraian</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase">Total (Rp)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {anggaran.slice(0, 20).map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-gray-600 font-mono text-xs">{a.kode_item}</td>
-                    <td className="px-4 py-2 text-gray-800">{a.uraian_item}</td>
-                    <td className="px-4 py-2 text-right text-gray-800">
-                      {new Intl.NumberFormat('id-ID').format(parseFloat(a.total || 0))}
-                    </td>
-                  </tr>
-                ))}
-                {anggaran.length === 0 && (
-                  <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">Tidak ada data</td></tr>
+
+            {/* Chart + Gauge */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              <div className="lg:col-span-3 ikn-card p-6">
+                <div className="mb-5">
+                  <h2 className="font-bold text-ikn-dark">Tren Realisasi</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">{satkerNama}</p>
+                </div>
+                <DisbursementChart data={chartData} />
+              </div>
+              <div className="ikn-card p-6 flex items-center justify-center">
+                <AbsorptionGauge percentage={persen} />
+              </div>
+            </div>
+
+            {/* Budget table */}
+            <div className="ikn-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div className="w-1 h-5 rounded-full bg-ikn-blue" />
+                <h3 className="font-bold text-ikn-dark text-sm">Detail Anggaran per Output</h3>
+                {anggaran.length > 20 && (
+                  <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    Menampilkan 20 dari {anggaran.length}
+                  </span>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-ikn-bg/60">
+                      <th className="ikn-table-th">Kode Item</th>
+                      <th className="ikn-table-th">Uraian Output</th>
+                      <th className="ikn-table-th text-right">Total (Rp)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {anggaran.slice(0, 20).map((a, i) => (
+                      <tr key={a.id}
+                        className={`border-t border-gray-100 hover:bg-ikn-blue-light/40 transition-colors ${
+                          i % 2 === 0 ? '' : 'bg-gray-50/40'
+                        }`}
+                      >
+                        <td className="ikn-table-td">
+                          <code className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                            {a.kode_item}
+                          </code>
+                        </td>
+                        <td className="ikn-table-td font-medium text-ikn-dark">{a.uraian_item}</td>
+                        <td className="ikn-table-td text-right font-semibold text-ikn-blue">
+                          {formatIDRFull(a.total)}
+                        </td>
+                      </tr>
+                    ))}
+                    {anggaran.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-12 text-center text-gray-300">
+                          <div className="flex flex-col items-center gap-2">
+                            <BanknotesIcon className="w-10 h-10 opacity-30" />
+                            <span className="text-sm">Tidak ada data anggaran</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

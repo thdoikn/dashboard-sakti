@@ -1,3 +1,84 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-ikn-bg text-ikn-dark;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-gray-200;
+  }
+}
+
+@layer components {
+  .ikn-card {
+    @apply bg-white rounded-2xl shadow-card border border-white/60;
+  }
+
+  .ikn-badge-active {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-ikn-green-light text-ikn-green-dark;
+  }
+
+  .ikn-badge-inactive {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500;
+  }
+
+  .ikn-btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 bg-ikn-blue text-white text-sm font-semibold rounded-xl
+           hover:bg-ikn-blue-dark active:scale-[0.98] transition-all duration-150 shadow-sm;
+  }
+
+  .ikn-btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 bg-white text-ikn-blue text-sm font-semibold rounded-xl
+           border border-ikn-blue-soft hover:bg-ikn-blue-light active:scale-[0.98] transition-all duration-150;
+  }
+
+  .ikn-btn-success {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 bg-ikn-green text-white text-sm font-semibold rounded-xl
+           hover:bg-ikn-green-dark active:scale-[0.98] transition-all duration-150 shadow-sm;
+  }
+
+  .ikn-btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 text-gray-600 text-sm font-medium rounded-xl
+           hover:bg-gray-100 active:scale-[0.98] transition-all duration-150;
+  }
+
+  .ikn-input {
+    @apply w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-ikn-blue/20 focus:border-ikn-blue
+           transition-all duration-150 placeholder:text-gray-400;
+  }
+
+  .ikn-select {
+    @apply px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-ikn-blue/20 focus:border-ikn-blue
+           transition-all duration-150 cursor-pointer;
+  }
+
+  .ikn-table-th {
+    @apply px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider;
+  }
+
+  .ikn-table-td {
+    @apply px-4 py-3.5 text-sm text-gray-700;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(24,80,136,0.2) transparent;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
