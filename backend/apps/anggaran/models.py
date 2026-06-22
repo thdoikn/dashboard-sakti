@@ -65,14 +65,14 @@ class Anggaran(models.Model):
         verbose_name="Satker",
     )
     # Program hierarchy codes (from SAKTI dataAng response)
-    kode_program = models.CharField(max_length=10, verbose_name="Kode Program")
-    kode_kegiatan = models.CharField(max_length=10, verbose_name="Kode Kegiatan")
-    kode_output = models.CharField(max_length=10, verbose_name="Kode Output")
+    kode_program = models.CharField(max_length=20, verbose_name="Kode Program")
+    kode_kegiatan = models.CharField(max_length=20, verbose_name="Kode Kegiatan")
+    kode_output = models.CharField(max_length=20, verbose_name="Kode Output")
     kode_suboutput = models.CharField(
-        max_length=10, blank=True, default="", verbose_name="Kode Sub-Output"
+        max_length=20, blank=True, default="", verbose_name="Kode Sub-Output"
     )
-    kode_komponen = models.CharField(max_length=10, verbose_name="Kode Komponen")
-    kode_akun = models.CharField(max_length=10, verbose_name="Kode Akun")
+    kode_komponen = models.CharField(max_length=20, verbose_name="Kode Komponen")
+    kode_akun = models.CharField(max_length=20, verbose_name="Kode Akun")
     kode_item = models.CharField(
         max_length=50,
         verbose_name="Kode Item",
