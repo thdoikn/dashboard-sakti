@@ -13,7 +13,9 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_API_BASE_URL=http://localhost:8000/api
+# Default to /api so nginx proxies requests to the backend container.
+# Override with --build-arg VITE_API_BASE_URL=... only when not using nginx proxy.
+ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 RUN npm run build

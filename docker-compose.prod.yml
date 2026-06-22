@@ -1,7 +1,34 @@
 version: "3.9"
 
-# Production docker-compose — no source volume mounts, pre-built images, restart policies
+# Production docker-compose — uses pre-built GHCR images, no source code needed on the VM.
+#
+# On the VM you only need:
+#   - this file
+#   - mysql/init.sql   (DB initialization script)
+#   - .env             (copy from .env.example and fill in secrets)
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# To pin a specific release (recommended for production):
+#   IMAGE_TAG=sha-<git-sha> docker compose -f docker-compose.prod.yml up -d
+#
 # Note: No application-level authentication — access restricted at OIKN network level.
+
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR:          ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
+  AIRFLOW__WEBSERVER__SECRET_KEY:   ${AIRFLOW__WEBSERVER__SECRET_KEY}
+  AIRFLOW__CORE__LOAD_EXAMPLES:     "False"
+  DJANGO_SETTINGS_MODULE:           config.settings.production
+  MYSQL_DATA_DB:                    ${MYSQL_DATA_DB:-sakti_data}
+  MYSQL_DATA_USER:                  ${MYSQL_DATA_USER:-sakti_app}
+  MYSQL_DATA_PASSWORD:              ${MYSQL_DATA_PASSWORD}
+  MYSQL_HOST:                       ${MYSQL_HOST:-mysql}
+  MYSQL_PORT:                       ${MYSQL_PORT:-3306}
+  SAKTI_API_BASE_URL:               ${SAKTI_API_BASE_URL}
+  SAKTI_GATEWAY_API_KEY:            ${SAKTI_GATEWAY_API_KEY}
 
 services:
   mysql:
@@ -24,24 +51,21 @@ services:
       - sakti_network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: runtime
+    image: ghcr.io/thdoikn/dashboard-sakti/backend:${IMAGE_TAG:-latest}
     container_name: sakti_backend
     restart: unless-stopped
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DJANGO_DEBUG: "False"
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
-      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
-      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST:-mysql}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
-      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
+      DJANGO_SECRET_KEY:      ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG:           "False"
+      DJANGO_ALLOWED_HOSTS:   ${DJANGO_ALLOWED_HOSTS}
+      MYSQL_DATA_DB:          ${MYSQL_DATA_DB:-sakti_data}
+      MYSQL_DATA_USER:        ${MYSQL_DATA_USER:-sakti_app}
+      MYSQL_DATA_PASSWORD:    ${MYSQL_DATA_PASSWORD}
+      MYSQL_HOST:             ${MYSQL_HOST:-mysql}
+      MYSQL_PORT:             ${MYSQL_PORT:-3306}
+      SAKTI_API_BASE_URL:     ${SAKTI_API_BASE_URL}
+      SAKTI_GATEWAY_API_KEY:  ${SAKTI_GATEWAY_API_KEY}
     ports:
       - "8000:8000"
     depends_on:
@@ -60,10 +84,7 @@ services:
       - sakti_network
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: runtime
+    image: ghcr.io/thdoikn/dashboard-sakti/frontend:${IMAGE_TAG:-latest}
     container_name: sakti_frontend
     restart: unless-stopped
     ports:
@@ -81,27 +102,14 @@ services:
       - sakti_network
 
   airflow-init:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
+    image: ghcr.io/thdoikn/dashboard-sakti/airflow:${IMAGE_TAG:-latest}
     container_name: sakti_airflow_init
     environment:
-      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
-      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
-      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST:-mysql}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      <<: *airflow-env
+      AIRFLOW_ADMIN_USER:     ${AIRFLOW_ADMIN_USER:-admin}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - ./backend:/opt/django_app:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -114,30 +122,15 @@ services:
       - sakti_network
 
   airflow-webserver:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
+    image: ghcr.io/thdoikn/dashboard-sakti/airflow:${IMAGE_TAG:-latest}
     container_name: sakti_airflow_webserver
     restart: unless-stopped
     environment:
-      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
-      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
-      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST:-mysql}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
-      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
-      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      <<: *airflow-env
+      AIRFLOW_ADMIN_USER:     ${AIRFLOW_ADMIN_USER:-admin}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - ./backend:/opt/django_app:ro
     ports:
       - "8080:8080"
     depends_on:
@@ -154,28 +147,13 @@ services:
       - sakti_network
 
   airflow-scheduler:
-    build:
-      context: ./airflow
-      dockerfile: Dockerfile
+    image: ghcr.io/thdoikn/dashboard-sakti/airflow:${IMAGE_TAG:-latest}
     container_name: sakti_airflow_scheduler
     restart: unless-stopped
     environment:
-      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW__CORE__EXECUTOR:-LocalExecutor}
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      MYSQL_DATA_DB: ${MYSQL_DATA_DB:-sakti_data}
-      MYSQL_DATA_USER: ${MYSQL_DATA_USER:-sakti_app}
-      MYSQL_DATA_PASSWORD: ${MYSQL_DATA_PASSWORD}
-      MYSQL_HOST: ${MYSQL_HOST:-mysql}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      SAKTI_API_BASE_URL: ${SAKTI_API_BASE_URL}
-      SAKTI_GATEWAY_API_KEY: ${SAKTI_GATEWAY_API_KEY}
+      <<: *airflow-env
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - ./backend:/opt/django_app:ro
     depends_on:
       mysql:
         condition: service_healthy

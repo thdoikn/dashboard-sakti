@@ -1,0 +1,31 @@
+# Production Airflow image — self-contained, no source volume mounts needed.
+# Must be built from the PROJECT ROOT as build context:
+#   docker build -f airflow/Dockerfile.prod -t sakti-airflow .
+#
+# Differences from the dev Dockerfile:
+#   - Copies backend/ and airflow/dags/ into the image at build time
+#   - No ./backend or ./airflow/dags volume mounts needed in docker-compose.prod.yml
+
+FROM apache/airflow:2.9.3
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-libmysqlclient-dev \
+    pkg-config \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bake Django backend code into the image so the container is fully self-contained.
+# Airflow DAG tasks import Django ORM via PYTHONPATH (Option A per CLAUDE.md).
+COPY --chown=airflow:root backend/ /opt/django_app/
+
+USER airflow
+
+COPY airflow/requirements.txt /requirements-extra.txt
+RUN pip install --no-cache-dir -r /requirements-extra.txt
+
+# Bake DAGs into the image (no ./airflow/dags volume mount needed in prod)
+COPY --chown=airflow:root airflow/dags/ /opt/airflow/dags/
+
+ENV PYTHONPATH="/opt/django_app:${PYTHONPATH}"
