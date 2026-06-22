@@ -28,4 +28,4 @@ RUN pip install --no-cache-dir -r /requirements-extra.txt
 # Bake DAGs into the image (no ./airflow/dags volume mount needed in prod)
 COPY --chown=airflow:root airflow/dags/ /opt/airflow/dags/
 
-ENV PYTHONPATH="/opt/django_app:${PYTHONPATH}"
+ENV PYTHONPATH="/opt/django_app"

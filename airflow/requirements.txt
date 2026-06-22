@@ -1,4 +1,4 @@
 Django==5.0.6
 mysqlclient==2.2.4
 tenacity==8.5.0
-apache-airflow-providers-mysql==3.5.2
+apache-airflow-providers-mysql
