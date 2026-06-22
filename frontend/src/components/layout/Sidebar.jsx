@@ -3,17 +3,20 @@ import {
   HomeIcon,
   ChartBarIcon,
   BuildingOffice2Icon,
+  ServerStackIcon,
 } from '@heroicons/react/24/outline'
 import {
   HomeIcon as HomeSolid,
   ChartBarIcon as ChartSolid,
   BuildingOffice2Icon as BuildingSolid,
+  ServerStackIcon as ServerSolid,
 } from '@heroicons/react/24/solid'
 
 const navItems = [
-  { to: '/overview',           label: 'Overview',       icon: HomeIcon,            iconActive: HomeSolid },
-  { to: '/satker-detail',      label: 'Detail Satker',  icon: ChartBarIcon,        iconActive: ChartSolid },
-  { to: '/satker-management',  label: 'Kelola Satker',  icon: BuildingOffice2Icon, iconActive: BuildingSolid },
+  { to: '/overview',    label: 'Overview',        icon: HomeIcon,            iconActive: HomeSolid    },
+  { to: '/satker-detail',label: 'Detail Satker',  icon: ChartBarIcon,        iconActive: ChartSolid   },
+  { to: '/satker-management', label: 'Kelola Satker', icon: BuildingOffice2Icon, iconActive: BuildingSolid },
+  { to: '/monitoring',  label: 'Monitoring Sync', icon: ServerStackIcon,     iconActive: ServerSolid  },
 ]
 
 export default function Sidebar() {

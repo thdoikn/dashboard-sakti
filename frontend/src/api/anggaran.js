@@ -12,6 +12,9 @@ export const getCapaianRO = (params = {}) =>
 export const getSyncStatus = () =>
   apiClient.get('/sync-status/')
 
+export const getSyncHistory = (params = {}) =>
+  apiClient.get('/sync-history/', { params })
+
 export const exportExcel = (params = {}) =>
   apiClient.get('/export/excel/', {
     params,
