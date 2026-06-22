@@ -99,7 +99,10 @@ export default function Sidebar() {
         <p className="text-white/25 text-[10px] leading-relaxed">
           Akses internal — jaringan OIKN saja
         </p>
-        <p className="text-white/20 text-[10px] mt-1">v1.0.0 · 2026</p>
+        <p className="text-white/20 text-[10px] mt-2 leading-relaxed">
+          Dibangun oleh Direktorat Data<br />dan Kecerdasan Buatan
+        </p>
+        <p className="text-white/15 text-[10px] mt-1">© 2026 OIKN · v1.0.0</p>
       </div>
     </aside>
   )
