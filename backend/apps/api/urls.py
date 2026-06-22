@@ -31,6 +31,7 @@ router.register(r"sync-log", views.SyncLogViewSet, basename="sync-log")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("sync-status/", views.sync_status_view, name="sync-status"),
+    path("sync-status/",  views.sync_status_view,  name="sync-status"),
+    path("sync-history/", views.sync_history_view, name="sync-history"),
     path("export/excel/", views.excel_export_view, name="excel-export"),
 ]

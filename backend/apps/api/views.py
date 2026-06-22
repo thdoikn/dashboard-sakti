@@ -14,6 +14,8 @@ Endpoints:
 """
 
 import io
+from collections import defaultdict
+from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.http import HttpResponse, JsonResponse
@@ -189,6 +191,90 @@ def sync_status_view(request):
             "timestamp": timezone.now().isoformat(),
         }
     )
+
+
+@api_view(["GET"])
+def sync_history_view(request):
+    """
+    Returns a list of DAG runs aggregated from SyncLog records, newest first.
+
+    Each entry groups all SyncLog rows that share a dag_run_id and computes:
+      overall_status  — success (all ok) / partial (some failed) / failed (all failed)
+      success_count, failed_count, total_tasks, total_rows
+      tasks           — per-task detail list
+
+    Query params:
+      days  — how many days of history to include (default 30, max 90)
+    """
+    days = min(int(request.query_params.get("days", 30)), 90)
+    since = timezone.now() - timedelta(days=days)
+
+    logs = (
+        SyncLog.objects.filter(started_at__gte=since)
+        .select_related("satker")
+        .order_by("dag_run_id", "started_at")
+    )
+
+    # Group rows by dag_run_id in Python (cheaper than a GROUP BY for small datasets)
+    grouped: dict[str, list] = defaultdict(list)
+    for log in logs:
+        grouped[log.dag_run_id].append(log)
+
+    result = []
+    for dag_run_id, tasks in sorted(
+        grouped.items(), key=lambda kv: kv[1][0].started_at, reverse=True
+    ):
+        started_at   = min(t.started_at for t in tasks)
+        finish_times = [t.finished_at for t in tasks if t.finished_at]
+        finished_at  = max(finish_times) if finish_times else None
+
+        success_count = sum(1 for t in tasks if t.status == SyncLog.STATUS_SUCCESS)
+        failed_count  = sum(1 for t in tasks if t.status == SyncLog.STATUS_FAILED)
+        total_rows    = sum(t.row_count or 0 for t in tasks)
+
+        if failed_count == 0:
+            overall_status = "success"
+        elif success_count == 0:
+            overall_status = "failed"
+        else:
+            overall_status = "partial"
+
+        duration_s = (
+            int((finished_at - started_at).total_seconds()) if finished_at else None
+        )
+
+        task_list = []
+        for t in sorted(tasks, key=lambda x: x.started_at):
+            t_dur = (
+                int((t.finished_at - t.started_at).total_seconds())
+                if t.finished_at else None
+            )
+            task_list.append({
+                "task_name":       t.task_name,
+                "status":          t.status,
+                "satker_nama":     t.satker.nama_satker if t.satker else None,
+                "row_count":       t.row_count,
+                "error_message":   t.error_message,
+                "started_at":      t.started_at.isoformat(),
+                "finished_at":     t.finished_at.isoformat() if t.finished_at else None,
+                "duration_seconds": t_dur,
+            })
+
+        result.append({
+            "dag_run_id":       dag_run_id,
+            "date":             started_at.date().isoformat(),
+            "started_at":       started_at.isoformat(),
+            "finished_at":      finished_at.isoformat() if finished_at else None,
+            "duration_seconds": duration_s,
+            "overall_status":   overall_status,
+            "total_tasks":      len(tasks),
+            "success_count":    success_count,
+            "failed_count":     failed_count,
+            "total_rows":       total_rows,
+            "tasks":            task_list,
+        })
+
+    return Response(result)
 
 
 @api_view(["GET"])
