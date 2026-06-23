@@ -14,9 +14,16 @@ RUN npm ci
 COPY . .
 
 # Default to /api so nginx proxies requests to the backend container.
-# Override with --build-arg VITE_API_BASE_URL=... only when not using nginx proxy.
 ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+# Keycloak SSO — set via GitHub repo variables (Settings → Variables → Actions).
+# VITE_OIDC_AUTHORITY  = Keycloak authorization endpoint URL
+# VITE_OIDC_CLIENT_ID  = Keycloak client ID for this app
+ARG VITE_OIDC_AUTHORITY=""
+ARG VITE_OIDC_CLIENT_ID=""
+ENV VITE_OIDC_AUTHORITY=${VITE_OIDC_AUTHORITY}
+ENV VITE_OIDC_CLIENT_ID=${VITE_OIDC_CLIENT_ID}
 
 RUN npm run build
 
