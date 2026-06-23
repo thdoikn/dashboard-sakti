@@ -27,8 +27,10 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
     "django_filters",
+    "mozilla_django_oidc",
 ]
 
 LOCAL_APPS = [
@@ -53,6 +55,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # SessionRefresh MUST come after AuthenticationMiddleware (mozilla_django_oidc requirement)
+    "mozilla_django_oidc.middleware.SessionRefresh",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -121,8 +125,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ── Custom User model ─────────────────────────────────────────────────────────
 AUTH_USER_MODEL = "accounts.User"
 
+# ── Authentication backends ───────────────────────────────────────────────────
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.oidc.SaktiOIDCBackend",       # SSO via Keycloak
+    "django.contrib.auth.backends.ModelBackend",  # Fallback (Django admin)
+]
+
 # ── Django REST Framework ─────────────────────────────────────────────────────
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_FILTER_BACKENDS": [
@@ -140,6 +156,30 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
 }
+
+# ── SimpleJWT ─────────────────────────────────────────────────────────────────
+from datetime import timedelta  # noqa: E402
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=8),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+}
+
+# ── SSO / OpenID Connect (Keycloak) ──────────────────────────────────────────
+OIDC_RP_CLIENT_ID     = os.environ.get("OIDC_RP_CLIENT_ID", "")
+OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET", "")
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get("OIDC_OP_AUTHORIZATION_ENDPOINT", "")
+OIDC_OP_TOKEN_ENDPOINT         = os.environ.get("OIDC_OP_TOKEN_ENDPOINT", "")
+OIDC_OP_USER_ENDPOINT          = os.environ.get("OIDC_OP_USER_ENDPOINT", "")
+OIDC_OP_JWKS_ENDPOINT          = os.environ.get("OIDC_OP_JWKS_ENDPOINT", "")
+
+OIDC_RP_SIGN_ALGO       = os.environ.get("OIDC_RP_SIGN_ALGO", "RS256")
+OIDC_USE_PKCE           = False   # confidential client uses client_secret
+OIDC_STORE_ACCESS_TOKEN = True
+OIDC_USERNAME_ALGO      = "apps.accounts.oidc.generate_username"
+OIDC_AUTHENTICATION_CALLBACK_URL = "oidc-callback"
 
 # ── SAKTI API Client ──────────────────────────────────────────────────────────
 SAKTI_API_BASE_URL = os.environ.get(

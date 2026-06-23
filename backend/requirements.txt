@@ -8,3 +8,5 @@ openpyxl==3.1.5
 tenacity==8.5.0
 python-dotenv==1.0.1
 Pillow==10.4.0
+mozilla-django-oidc==4.0.1
+djangorestframework-simplejwt==5.3.1
