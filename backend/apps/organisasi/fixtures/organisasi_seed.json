@@ -1,0 +1,47 @@
+[
+  {"model": "organisasi.eseloni", "pk": 1, "fields": {"nama": "Sekretariat", "jenis": "sekretariat", "urutan": 1}},
+  {"model": "organisasi.eseloni", "pk": 2, "fields": {"nama": "Unit Kerja Hukum dan Kepatuhan", "jenis": "unit_kerja", "urutan": 2}},
+  {"model": "organisasi.eseloni", "pk": 3, "fields": {"nama": "Kedeputian Perencanaan dan Pertanahan", "jenis": "kedeputian", "urutan": 3}},
+  {"model": "organisasi.eseloni", "pk": 4, "fields": {"nama": "Kedeputian Pengendalian Pembangunan", "jenis": "kedeputian", "urutan": 4}},
+  {"model": "organisasi.eseloni", "pk": 5, "fields": {"nama": "Kedeputian Bidang Sosial, Budaya dan Pemberdayaan Masyarakat", "jenis": "kedeputian", "urutan": 5}},
+  {"model": "organisasi.eseloni", "pk": 6, "fields": {"nama": "Kedeputian Transformasi Hijau dan Digital", "jenis": "kedeputian", "urutan": 6}},
+  {"model": "organisasi.eseloni", "pk": 7, "fields": {"nama": "Kedeputian Lingkungan Hidup dan Sumber Daya Alam", "jenis": "kedeputian", "urutan": 7}},
+  {"model": "organisasi.eseloni", "pk": 8, "fields": {"nama": "Kedeputian Pendanaan dan Investasi", "jenis": "kedeputian", "urutan": 8}},
+  {"model": "organisasi.eseloni", "pk": 9, "fields": {"nama": "Kedeputian Sarana dan Prasarana", "jenis": "kedeputian", "urutan": 9}},
+
+  {"model": "organisasi.eselonii", "pk": 1,  "fields": {"nama": "Biro Perencanaan, Organisasi, dan Kerja Sama",                "eselon_i": 1}},
+  {"model": "organisasi.eselonii", "pk": 2,  "fields": {"nama": "Biro Sumber Daya Manusia dan Hubungan Masyarakat",            "eselon_i": 1}},
+  {"model": "organisasi.eselonii", "pk": 3,  "fields": {"nama": "Biro Umum dan Pengadaan Barang/Jasa",                        "eselon_i": 1}},
+  {"model": "organisasi.eselonii", "pk": 4,  "fields": {"nama": "Biro Keuangan, Barang Milik Negara, dan Aset Dalam Penguasan","eselon_i": 1}},
+
+  {"model": "organisasi.eselonii", "pk": 5,  "fields": {"nama": "Direktorat Hukum",                                           "eselon_i": 2}},
+  {"model": "organisasi.eselonii", "pk": 6,  "fields": {"nama": "Direktorat Kepatuhan",                                       "eselon_i": 2}},
+  {"model": "organisasi.eselonii", "pk": 7,  "fields": {"nama": "Direktorat Pengawasan dan Audit Internal",                   "eselon_i": 2}},
+
+  {"model": "organisasi.eselonii", "pk": 8,  "fields": {"nama": "Direktorat Perencanaan Makro",                               "eselon_i": 3}},
+  {"model": "organisasi.eselonii", "pk": 9,  "fields": {"nama": "Direktorat Pertanahan",                                      "eselon_i": 3}},
+
+  {"model": "organisasi.eselonii", "pk": 10, "fields": {"nama": "Direktorat Pengendalian Penyelenggaraan Pemerintahan dan Perizinan Pembangunan", "eselon_i": 4}},
+  {"model": "organisasi.eselonii", "pk": 11, "fields": {"nama": "Direktorat Pengawasan, Pemantauan, dan Evaluasi",            "eselon_i": 4}},
+  {"model": "organisasi.eselonii", "pk": 12, "fields": {"nama": "Direktorat Ketentraman dan Ketertiban Umum",                 "eselon_i": 4}},
+
+  {"model": "organisasi.eselonii", "pk": 13, "fields": {"nama": "Direktorat Pelayanan Dasar",                                 "eselon_i": 5}},
+  {"model": "organisasi.eselonii", "pk": 14, "fields": {"nama": "Direktorat Pemberdayaan Masyarakat",                         "eselon_i": 5}},
+  {"model": "organisasi.eselonii", "pk": 15, "fields": {"nama": "Direktorat Kebudayaan, Pariwisata, dan Ekonomi Kreatif",     "eselon_i": 5}},
+
+  {"model": "organisasi.eselonii", "pk": 16, "fields": {"nama": "Direktorat Pengembangan Ekosistem Digital",                  "eselon_i": 6}},
+  {"model": "organisasi.eselonii", "pk": 17, "fields": {"nama": "Direktorat Transformasi Hijau",                              "eselon_i": 6}},
+  {"model": "organisasi.eselonii", "pk": 18, "fields": {"nama": "Direktorat Data dan Kecerdasan Buatan",                      "eselon_i": 6}},
+
+  {"model": "organisasi.eselonii", "pk": 19, "fields": {"nama": "Direktorat Lingkungan Hidup dan Penanggulangan Bencana",     "eselon_i": 7}},
+  {"model": "organisasi.eselonii", "pk": 20, "fields": {"nama": "Direktorat Pengembangan Pemanfaatan Kehutanan dan Sumber Daya Air", "eselon_i": 7}},
+  {"model": "organisasi.eselonii", "pk": 21, "fields": {"nama": "Direktorat Ketahanan Pangan",                                "eselon_i": 7}},
+
+  {"model": "organisasi.eselonii", "pk": 22, "fields": {"nama": "Direktorat Investasi dan Kemudahan Berusaha",                "eselon_i": 8}},
+  {"model": "organisasi.eselonii", "pk": 23, "fields": {"nama": "Direktorat Pendanaan",                                       "eselon_i": 8}},
+  {"model": "organisasi.eselonii", "pk": 24, "fields": {"nama": "Direktorat Pembiayaan",                                      "eselon_i": 8}},
+
+  {"model": "organisasi.eselonii", "pk": 25, "fields": {"nama": "Direktorat Sarana Prasarana Dasar",                          "eselon_i": 9}},
+  {"model": "organisasi.eselonii", "pk": 26, "fields": {"nama": "Direktorat Sarana dan Prasarana Sosial",                     "eselon_i": 9}},
+  {"model": "organisasi.eselonii", "pk": 27, "fields": {"nama": "Direktorat Pengelolaan Gedung, Kawasan dan Perkotaan",       "eselon_i": 9}}
+]

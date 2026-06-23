@@ -32,6 +32,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    "apps.organisasi",
     "apps.satker",
     "apps.anggaran",
     "apps.realisasi",
