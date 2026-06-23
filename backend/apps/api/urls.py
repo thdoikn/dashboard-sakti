@@ -34,4 +34,5 @@ urlpatterns = [
     path("sync-status/",  views.sync_status_view,  name="sync-status"),
     path("sync-history/", views.sync_history_view, name="sync-history"),
     path("export/excel/", views.excel_export_view, name="excel-export"),
+    path("users/",        views.users_list_view,   name="users-list"),
 ]

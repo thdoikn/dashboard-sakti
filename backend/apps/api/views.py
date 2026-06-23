@@ -11,6 +11,7 @@ Endpoints:
   GET  /api/sync-log/                       — audit log of all sync task runs
   GET  /api/sync-status/                    — latest sync result for dashboard badge
   GET  /api/export/excel/                   — download .xlsx file with filters
+  GET  /api/users/                          — user list sorted by role + last login (auth required)
 """
 
 import io
@@ -454,3 +455,64 @@ def health_check_view(request):
             "timestamp": timezone.now().isoformat(),
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# User management (requires authentication)
+# ---------------------------------------------------------------------------
+
+@api_view(["GET"])
+def users_list_view(request):
+    """
+    GET /api/users/
+    Returns all users sorted by role priority then most-recent last_login.
+    Requires a valid JWT access token.
+    """
+    from django.contrib.auth import get_user_model
+    from django.db.models import Case, IntegerField, Value, When
+
+    if not request.user or not request.user.is_authenticated:
+        from rest_framework.response import Response as DRFResponse
+        return DRFResponse({"detail": "Authentication credentials were not provided."}, status=401)
+
+    User = get_user_model()
+    # Role priority: admin first, then operator, then viewer
+    role_order = Case(
+        When(role="admin",    then=Value(0)),
+        When(role="operator", then=Value(1)),
+        default=Value(2),
+        output_field=IntegerField(),
+    )
+    qs = (
+        User.objects
+        .select_related("unit_eselon_i", "unit_eselon_ii")
+        .annotate(role_priority=role_order)
+        .order_by("role_priority", "-last_login")
+    )
+
+    data = []
+    for u in qs:
+        data.append({
+            "id":            u.id,
+            "username":      u.username,
+            "email":         u.email,
+            "display_name":  u.get_full_name() or u.username,
+            "first_name":    u.first_name,
+            "last_name":     u.last_name,
+            "role":          u.role,
+            "nip":           u.nip,
+            "jabatan":       u.jabatan,
+            "unit_eselon_i": {
+                "id":    u.unit_eselon_i.id,
+                "nama":  u.unit_eselon_i.nama,
+                "jenis": u.unit_eselon_i.jenis,
+            } if u.unit_eselon_i else None,
+            "unit_eselon_ii": {
+                "id":   u.unit_eselon_ii.id,
+                "nama": u.unit_eselon_ii.nama,
+            } if u.unit_eselon_ii else None,
+            "last_login":  u.last_login.isoformat() if u.last_login else None,
+            "date_joined": u.date_joined.isoformat(),
+            "is_active":   u.is_active,
+        })
+    return Response(data)
