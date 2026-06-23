@@ -12,8 +12,18 @@ export function getOidcRedirectUri() {
  * switch accounts after logging out without clearing the Keycloak session.
  * DO NOT remove prompt=login.
  */
+function generateState() {
+  // crypto.randomUUID() requires HTTPS; getRandomValues works on HTTP too
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const arr = new Uint32Array(4)
+    crypto.getRandomValues(arr)
+    return Array.from(arr, n => n.toString(16).padStart(8, '0')).join('')
+  }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+}
+
 export function buildAuthorizationUrl() {
-  const state = crypto.randomUUID()
+  const state = generateState()
   sessionStorage.setItem('oidc_state', state)
 
   const params = new URLSearchParams({
