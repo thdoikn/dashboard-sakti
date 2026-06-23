@@ -10,15 +10,13 @@ import apiClient from '../api/client'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const ROLE_LABEL = {
-  admin:    'Admin',
-  operator: 'Operator',
-  viewer:   'Viewer',
+  superadmin: 'Super Admin',
+  staff:      'Staff',
 }
 
 const ROLE_COLOR = {
-  admin:    'bg-red-100 text-red-700',
-  operator: 'bg-blue-100 text-blue-700',
-  viewer:   'bg-gray-100 text-gray-600',
+  superadmin: 'bg-red-100 text-red-700',
+  staff:      'bg-blue-100 text-blue-700',
 }
 
 const JENIS_LABEL = {
@@ -131,9 +129,8 @@ export default function UserManagement() {
 
   // Group by role for section headers
   const groups = [
-    { key: 'admin',    label: 'Admin',    users: filtered.filter(u => u.role === 'admin') },
-    { key: 'operator', label: 'Operator', users: filtered.filter(u => u.role === 'operator') },
-    { key: 'viewer',   label: 'Viewer',   users: filtered.filter(u => u.role === 'viewer') },
+    { key: 'superadmin', label: 'Super Admin', users: filtered.filter(u => u.role === 'superadmin') },
+    { key: 'staff',      label: 'Staff',       users: filtered.filter(u => u.role === 'staff') },
   ].filter(g => g.users.length > 0)
 
   return (

@@ -20,14 +20,13 @@ class User(AbstractUser):
     """
 
     class Role(models.TextChoices):
-        ADMIN = "admin", "Admin"
-        OPERATOR = "operator", "Operator"
-        VIEWER = "viewer", "Viewer"
+        SUPERADMIN = "superadmin", "Super Admin"
+        STAFF = "staff", "Staff"
 
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
-        default=Role.VIEWER,
+        default=Role.STAFF,
         verbose_name="Role",
     )
 

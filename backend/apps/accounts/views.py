@@ -63,7 +63,10 @@ class OIDCCallbackView(APIView):
             )
 
         if user is None:
-            return Response({"error": "User not found or not allowed"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Akun Anda tidak memiliki akses ke aplikasi ini. Hubungi administrator untuk mendapatkan role yang sesuai."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if not user.is_active:
             return Response({"error": "Account is inactive"}, status=status.HTTP_403_FORBIDDEN)
 

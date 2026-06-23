@@ -27,7 +27,7 @@ const navItems = [
   { to: '/users',             label: 'Pengguna',        icon: UsersIcon,           iconActive: UsersSolid   },
 ]
 
-const ROLE_LABEL = { admin: 'Admin', operator: 'Operator', viewer: 'Viewer' }
+const ROLE_LABEL = { superadmin: 'Super Admin', staff: 'Staff' }
 
 export default function Sidebar() {
   const navigate    = useNavigate()

@@ -142,7 +142,12 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
 
     # ── Role mapping ─────────────────────────────────────────────────────────
 
-    def _map_role(self, claims) -> str:
+    def _map_role(self, claims) -> str | None:
+        """
+        Returns the app role string, or None if the user has no recognised role.
+        None means the user is NOT allowed to log in — OIDCCallbackView returns 403.
+        Configure 'superadmin' or 'staff' client roles in Keycloak for this app.
+        """
         from django.conf import settings as s
         realm_roles  = claims.get("realm_access", {}).get("roles", [])
         client_roles = (
@@ -151,11 +156,11 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
                   .get("roles", [])
         )
         all_roles = set(realm_roles) | set(client_roles)
-        if "sakti-admin" in all_roles or "admin" in all_roles:
-            return User.Role.ADMIN
-        if "sakti-operator" in all_roles or "operator" in all_roles:
-            return User.Role.OPERATOR
-        return User.Role.VIEWER
+        if "superadmin" in all_roles or "sakti-superadmin" in all_roles:
+            return User.Role.SUPERADMIN
+        if "staff" in all_roles or "sakti-staff" in all_roles:
+            return User.Role.STAFF
+        return None  # no recognised role → access denied
 
     # ── Profile extraction ────────────────────────────────────────────────────
 
@@ -205,6 +210,11 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
     # ── Create / Update ───────────────────────────────────────────────────────
 
     def create_user(self, claims):
+        role = self._map_role(claims)
+        if role is None:
+            # User authenticated with Keycloak but has no recognised app role → deny
+            return None
+
         email   = claims.get("email", "")
         profile = self._extract_profile(claims)
         first_name, last_name = self._extract_names(claims)
@@ -218,7 +228,7 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
                         email      = email,
                         first_name = first_name,
                         last_name  = last_name,
-                        role       = self._map_role(claims),
+                        role       = role,
                         **profile,
                     )
                     user.set_unusable_password()
@@ -231,13 +241,21 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
 
     def update_user(self, user, claims):
         """Sync all profile fields from Keycloak on every login."""
+        new_role = self._map_role(claims)
+
+        # Role removed from Keycloak → deactivate the user immediately
+        if new_role is None:
+            if user.is_active:
+                user.is_active = False
+                user.save(update_fields=["is_active"])
+            return None  # OIDCCallbackView treats None as access denied
+
         changed = []
         profile = self._extract_profile(claims)
 
         for field, value in profile.items():
             current = getattr(user, field, None)
             if field.startswith("unit_"):
-                # FK field: compare by pk
                 cur_pk = current.pk if current is not None else None
                 new_pk = value.pk if value is not None else None
                 if cur_pk != new_pk:
@@ -254,10 +272,14 @@ class SaktiOIDCBackend(OIDCAuthenticationBackend):
                 setattr(user, attr, val)
                 changed.append(attr)
 
-        new_role = self._map_role(claims)
         if user.role != new_role:
             user.role = new_role
             changed.append("role")
+
+        # Re-activate if the account was previously deactivated
+        if not user.is_active:
+            user.is_active = True
+            changed.append("is_active")
 
         if changed:
             user.save(update_fields=changed)

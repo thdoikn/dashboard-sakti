@@ -478,8 +478,8 @@ def users_list_view(request):
     User = get_user_model()
     # Role priority: admin first, then operator, then viewer
     role_order = Case(
-        When(role="admin",    then=Value(0)),
-        When(role="operator", then=Value(1)),
+        When(role="superadmin", then=Value(0)),
+        When(role="staff",      then=Value(1)),
         default=Value(2),
         output_field=IntegerField(),
     )
