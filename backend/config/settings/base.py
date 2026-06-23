@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.organisasi",
+    "apps.accounts",
     "apps.satker",
     "apps.anggaran",
     "apps.realisasi",
@@ -116,6 +117,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # ── Default primary key ───────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ── Custom User model ─────────────────────────────────────────────────────────
+AUTH_USER_MODEL = "accounts.User"
 
 # ── Django REST Framework ─────────────────────────────────────────────────────
 REST_FRAMEWORK = {
