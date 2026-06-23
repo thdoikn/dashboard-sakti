@@ -1,21 +1,39 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import Overview from './pages/Overview'
 import SatkerDetail from './pages/SatkerDetail'
 import SatkerManagement from './pages/SatkerManagement'
 import SyncMonitoring from './pages/SyncMonitoring'
+import UserManagement from './pages/UserManagement'
+import LoginPage from './pages/auth/Login'
+import OidcCallbackPage from './pages/auth/OidcCallback'
 
-// No authentication — internal tool, access restricted via OIKN network only
+// Internal tool — no application-level auth in v1 per PRD.
+// SSO is now implemented: access restricted via Keycloak + JWT tokens.
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<OidcCallbackPage />} />
+
+        {/* Protected routes — redirect to /login if no JWT token */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/overview" replace />} />
-          <Route path="overview" element={<Overview />} />
-          <Route path="satker-detail" element={<SatkerDetail />} />
-          <Route path="satker-management" element={<SatkerManagement />} />
-          <Route path="monitoring" element={<SyncMonitoring />} />
+          <Route path="overview"           element={<Overview />} />
+          <Route path="satker-detail"      element={<SatkerDetail />} />
+          <Route path="satker-management"  element={<SatkerManagement />} />
+          <Route path="monitoring"         element={<SyncMonitoring />} />
+          <Route path="users"              element={<UserManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>
