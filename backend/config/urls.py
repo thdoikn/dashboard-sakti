@@ -40,8 +40,11 @@ def health_check(request):
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/auth/", include("apps.accounts.urls")),
     path("api/", include("apps.api.urls")),
     path("health/", health_check, name="health_check"),
+    # mozilla_django_oidc internal session endpoints (used by SessionRefresh middleware)
+    path("oidc/", include("mozilla_django_oidc.urls")),
     # Mock SAKTI API server — mirrors the real SAKTI URL structure.
     # In production, point SAKTI_API_BASE_URL to the real Kemenkeu gateway instead.
     path(
