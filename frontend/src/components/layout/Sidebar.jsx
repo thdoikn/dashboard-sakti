@@ -1,25 +1,52 @@
-import { NavLink } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   HomeIcon,
   ChartBarIcon,
   BuildingOffice2Icon,
   ServerStackIcon,
+  UsersIcon,
+  ArrowRightStartOnRectangleIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline'
 import {
   HomeIcon as HomeSolid,
   ChartBarIcon as ChartSolid,
   BuildingOffice2Icon as BuildingSolid,
   ServerStackIcon as ServerSolid,
+  UsersIcon as UsersSolid,
 } from '@heroicons/react/24/solid'
+import useAuthStore from '../../store/authStore'
+import { authService } from '../../services/auth'
 
 const navItems = [
-  { to: '/overview',    label: 'Overview',        icon: HomeIcon,            iconActive: HomeSolid    },
-  { to: '/satker-detail',label: 'Detail Satker',  icon: ChartBarIcon,        iconActive: ChartSolid   },
-  { to: '/satker-management', label: 'Kelola Satker', icon: BuildingOffice2Icon, iconActive: BuildingSolid },
-  { to: '/monitoring',  label: 'Monitoring Sync', icon: ServerStackIcon,     iconActive: ServerSolid  },
+  { to: '/overview',          label: 'Overview',        icon: HomeIcon,            iconActive: HomeSolid    },
+  { to: '/satker-detail',     label: 'Detail Satker',   icon: ChartBarIcon,        iconActive: ChartSolid   },
+  { to: '/satker-management', label: 'Kelola Satker',   icon: BuildingOffice2Icon, iconActive: BuildingSolid },
+  { to: '/monitoring',        label: 'Monitoring Sync', icon: ServerStackIcon,     iconActive: ServerSolid  },
+  { to: '/users',             label: 'Pengguna',        icon: UsersIcon,           iconActive: UsersSolid   },
 ]
 
+const ROLE_LABEL = { admin: 'Admin', operator: 'Operator', viewer: 'Viewer' }
+
 export default function Sidebar() {
+  const navigate    = useNavigate()
+  const { user, setUser, logout, accessToken } = useAuthStore()
+
+  // Hydrate user profile from /api/auth/me/ if we have a token but no user in store
+  useEffect(() => {
+    if (accessToken && !user) {
+      authService.getMe()
+        .then(data => setUser(data))
+        .catch(() => {})  // 401 handled by axios interceptor
+    }
+  }, [accessToken, user, setUser])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <aside className="w-64 min-h-screen bg-ikn-blue flex flex-col relative overflow-hidden shadow-sidebar">
       {/* Decorative background blobs */}
@@ -29,7 +56,6 @@ export default function Sidebar() {
       {/* Logo / Brand area */}
       <div className="relative z-10 px-5 pt-7 pb-6">
         <div className="flex items-center gap-3">
-          {/* Logo mark */}
           <div className="w-10 h-10 rounded-2xl bg-ikn-gold shadow-lg shadow-ikn-gold/40 flex items-center justify-center flex-shrink-0">
             <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
               <path d="M12 3L4 8v8l8 5 8-5V8L12 3z" fill="white" fillOpacity="0.95"/>
@@ -67,19 +93,15 @@ export default function Sidebar() {
           >
             {({ isActive }) => (
               <>
-                {/* Active left accent bar */}
                 <span className={`absolute left-0 w-1 h-6 rounded-r-full bg-ikn-gold transition-all duration-200 ${
                   isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
                 }`} />
-
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                  isActive
-                    ? 'bg-ikn-gold/20'
-                    : 'bg-white/0 group-hover:bg-white/10'
+                  isActive ? 'bg-ikn-gold/20' : 'bg-white/0 group-hover:bg-white/10'
                 }`}>
                   {isActive
-                    ? <IconActive className="w-4.5 h-4.5 text-ikn-gold" style={{width:'18px',height:'18px'}} />
-                    : <Icon className="w-4.5 h-4.5" style={{width:'18px',height:'18px'}} />
+                    ? <IconActive style={{width:'18px',height:'18px'}} className="text-ikn-gold" />
+                    : <Icon      style={{width:'18px',height:'18px'}} />
                   }
                 </span>
                 <span>{label}</span>
@@ -89,8 +111,43 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Logged-in user panel */}
+      {user && (
+        <>
+          <div className="mx-5 border-t border-white/10 mt-4" />
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                <UserCircleIcon className="w-6 h-6 text-white/60" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-semibold truncate leading-tight">{user.display_name}</p>
+                <p className="text-white/40 text-[10px] truncate">{user.email}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-ikn-gold/20 text-ikn-gold uppercase tracking-wide">
+                    {ROLE_LABEL[user.role] || user.role}
+                  </span>
+                  {user.unit_eselon_ii && (
+                    <span className="text-[9px] text-white/30 truncate max-w-[90px]" title={user.unit_eselon_ii.nama}>
+                      {user.unit_eselon_ii.nama}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="mt-3 w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-white/50 hover:bg-white/8 hover:text-white/80 text-xs transition-colors"
+            >
+              <ArrowRightStartOnRectangleIcon className="w-3.5 h-3.5" />
+              Keluar
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Footer */}
-      <div className="mx-5 border-t border-white/10 mt-4" />
+      <div className="mx-5 border-t border-white/10" />
       <div className="px-5 py-4">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-1.5 h-1.5 rounded-full bg-ikn-green animate-pulse" />
@@ -98,9 +155,6 @@ export default function Sidebar() {
         </div>
         <p className="text-white/25 text-[10px] leading-relaxed">
           Akses internal — jaringan OIKN saja
-        </p>
-        <p className="text-white/20 text-[10px] mt-2 leading-relaxed">
-          Dibangun oleh Direktorat Data<br />dan Kecerdasan Buatan
         </p>
         <p className="text-white/15 text-[10px] mt-1">© 2026 OIKN · v1.0.0</p>
       </div>
