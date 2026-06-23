@@ -69,6 +69,12 @@ services:
       MYSQL_PORT:             ${MYSQL_PORT:-3306}
       SAKTI_API_BASE_URL:     ${SAKTI_API_BASE_URL}
       SAKTI_GATEWAY_API_KEY:  ${SAKTI_GATEWAY_API_KEY}
+      OIDC_RP_CLIENT_ID:              ${OIDC_RP_CLIENT_ID}
+      OIDC_RP_CLIENT_SECRET:          ${OIDC_RP_CLIENT_SECRET}
+      OIDC_OP_AUTHORIZATION_ENDPOINT: ${OIDC_OP_AUTHORIZATION_ENDPOINT}
+      OIDC_OP_TOKEN_ENDPOINT:         ${OIDC_OP_TOKEN_ENDPOINT}
+      OIDC_OP_USER_ENDPOINT:          ${OIDC_OP_USER_ENDPOINT}
+      OIDC_OP_JWKS_ENDPOINT:          ${OIDC_OP_JWKS_ENDPOINT}
     # Port 8000 intentionally NOT exposed externally in production —
     # all traffic routes through nginx on port 80 (which proxies /api/* to backend:8000).
     # Exposing 8000 directly would bypass nginx security headers and allow unauthenticated
@@ -122,8 +128,9 @@ services:
         condition: service_healthy
     command: >
       bash -c "airflow db migrate &&
-               airflow users create --username $$AIRFLOW_ADMIN_USER --firstname Admin --lastname User
-                 --role Admin --email admin@oikn.go.id --password $$AIRFLOW_ADMIN_PASSWORD || true"
+               (airflow users create --username $$AIRFLOW_ADMIN_USER --firstname Admin --lastname User
+                 --role Admin --email admin@oikn.go.id --password $$AIRFLOW_ADMIN_PASSWORD ||
+                airflow users reset-password --username $$AIRFLOW_ADMIN_USER --password $$AIRFLOW_ADMIN_PASSWORD)"
     restart: on-failure
     networks:
       - sakti_network
