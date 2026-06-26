@@ -21,6 +21,10 @@ x-airflow-env: &airflow-env
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://${MYSQL_AIRFLOW_USER}:${MYSQL_AIRFLOW_PASSWORD}@${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}/${MYSQL_AIRFLOW_DB:-airflow_metadata}
   AIRFLOW__WEBSERVER__SECRET_KEY:   ${AIRFLOW__WEBSERVER__SECRET_KEY}
   AIRFLOW__CORE__LOAD_EXAMPLES:     "False"
+  # Cookie hardening — session cookie gets Secure + SameSite when TLS terminates upstream.
+  AIRFLOW__WEBSERVER__COOKIE_SECURE:    "True"
+  AIRFLOW__WEBSERVER__COOKIE_SAMESITE:  "Lax"
+  AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: "True"
   DJANGO_SETTINGS_MODULE:           config.settings.production
   MYSQL_DATA_DB:                    ${MYSQL_DATA_DB:-sakti_data}
   MYSQL_DATA_USER:                  ${MYSQL_DATA_USER:-sakti_app}
@@ -145,11 +149,14 @@ services:
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     volumes:
       - airflow_logs:/opt/airflow/logs
-    ports:
-      - "8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
+    # Bound to loopback only — the Airflow UI must NOT be reachable from the public
+    # internet (see README). Access it via SSH tunnel:
+    #   ssh -L 8080:localhost:8080 devapp@<vm-host>   then open http://localhost:8080
+    ports:
+      - "127.0.0.1:8080:8080"
     command: airflow webserver
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

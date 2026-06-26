@@ -33,9 +33,10 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Session security (cookies only sent over HTTPS when TLS is terminated upstream)
-SESSION_COOKIE_SECURE = False   # set True once TLS/HTTPS is in place
-CSRF_COOKIE_SECURE = False      # same — requires HTTPS termination
+# Session security — TLS is terminated upstream (Cloudflare) and nginx forwards
+# X-Forwarded-Proto, so SECURE_PROXY_SSL_HEADER lets Django mark cookies Secure.
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
