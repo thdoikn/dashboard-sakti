@@ -33,8 +33,11 @@ FROM nginx:alpine AS runtime
 # Copy Vite build output
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Custom nginx config for SPA routing (React Router fallback)
+# Custom nginx config for SPA routing (React Router fallback).
+# security-headers.conf is included by nginx.conf at the server level AND inside
+# the static-asset block, so headers are applied to every response (incl. *.js/*.css).
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 
 EXPOSE 80
 
