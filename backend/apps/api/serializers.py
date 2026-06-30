@@ -12,6 +12,7 @@ from apps.anggaran.models import Referensi, Anggaran
 from apps.realisasi.models import Realisasi
 from apps.capaian.models import CapaianRO
 from apps.sync_log.models import SyncLog
+from apps.activity_log.models import ActivityLog
 
 
 class SatkerSerializer(serializers.ModelSerializer):
@@ -49,6 +50,26 @@ class CapaianROSerializer(serializers.ModelSerializer):
     class Meta:
         model = CapaianRO
         fields = "__all__"
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    action_label = serializers.CharField(source="get_action_display", read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = [
+            "id",
+            "actor_name",
+            "actor_jabatan",
+            "actor_unit",
+            "actor_role",
+            "action",
+            "action_label",
+            "description",
+            "target_type",
+            "target_id",
+            "created_at",
+        ]
 
 
 class SyncLogSerializer(serializers.ModelSerializer):

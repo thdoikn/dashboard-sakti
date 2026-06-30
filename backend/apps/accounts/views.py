@@ -70,6 +70,20 @@ class OIDCCallbackView(APIView):
         if not user.is_active:
             return Response({"error": "Account is inactive"}, status=status.HTTP_403_FORBIDDEN)
 
+        # Record the login in the audit trail (best-effort). request.user is
+        # still anonymous at this point, so pass the resolved user explicitly.
+        try:
+            from apps.activity_log.models import ActivityLog
+            from apps.activity_log.services import log_activity
+            log_activity(
+                request,
+                ActivityLog.Action.LOGIN,
+                "Masuk ke dashboard via SSO OIKN",
+                user=user,
+            )
+        except Exception:
+            pass
+
         refresh = RefreshToken.for_user(user)
         return Response({
             "access":  str(refresh.access_token),

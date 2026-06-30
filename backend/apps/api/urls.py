@@ -28,6 +28,7 @@ router.register(r"anggaran", views.AnggaranViewSet, basename="anggaran")
 router.register(r"realisasi", views.RealisasiViewSet, basename="realisasi")
 router.register(r"capaian-ro", views.CapaianROViewSet, basename="capaian-ro")
 router.register(r"sync-log", views.SyncLogViewSet, basename="sync-log")
+router.register(r"activity-log", views.ActivityLogViewSet, basename="activity-log")
 
 urlpatterns = [
     path("", include(router.urls)),

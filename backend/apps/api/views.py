@@ -34,9 +34,12 @@ from apps.capaian.models import CapaianRO
 from apps.realisasi.models import Realisasi
 from apps.satker.models import Satker
 from apps.sync_log.models import SyncLog
+from apps.activity_log.models import ActivityLog
+from apps.activity_log.services import log_activity
 
 from .filters import AnggaranFilter, CapaianROFilter, RealisasiFilter, SyncLogFilter
 from .serializers import (
+    ActivityLogSerializer,
     AnggaranSerializer,
     CapaianROSerializer,
     ReferensiSerializer,
@@ -69,6 +72,44 @@ class SatkerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Satker.objects.all()
+
+    # ── Audit hooks ───────────────────────────────────────────────────────────
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_activity(
+            self.request,
+            ActivityLog.Action.SATKER_CREATE,
+            f"Menambah satker {instance.kode_satker} — {instance.nama_satker}",
+            target_type="satker",
+            target_id=instance.kode_satker,
+        )
+
+    def perform_update(self, serializer):
+        # Capture the pre-save active flag to distinguish a plain edit from a
+        # deactivation (the frontend deactivates via a normal update).
+        was_aktif = serializer.instance.aktif
+        instance = serializer.save()
+        if was_aktif and not instance.aktif:
+            action = ActivityLog.Action.SATKER_DEACTIVATE
+            desc = f"Menonaktifkan satker {instance.kode_satker} — {instance.nama_satker}"
+        else:
+            action = ActivityLog.Action.SATKER_UPDATE
+            desc = f"Mengubah satker {instance.kode_satker} — {instance.nama_satker}"
+        log_activity(
+            self.request, action, desc,
+            target_type="satker", target_id=instance.kode_satker,
+        )
+
+    def perform_destroy(self, instance):
+        kode, nama = instance.kode_satker, instance.nama_satker
+        super().perform_destroy(instance)
+        log_activity(
+            self.request,
+            ActivityLog.Action.SATKER_DELETE,
+            f"Menghapus satker {kode} — {nama}",
+            target_type="satker",
+            target_id=kode,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -155,6 +196,26 @@ class SyncLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return SyncLog.objects.select_related("satker").all()
+
+
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Audit trail of user actions (Satker CRUD, exports, logins), newest first.
+
+    Unlike the data viewsets, this is NOT AllowAny — it inherits the global
+    default permission (IsAuthenticated, or AllowAny only when AUTH_DISABLED),
+    since the log exposes who did what.
+    """
+
+    serializer_class = ActivityLogSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["action", "actor_role"]
+    search_fields = ["actor_name", "actor_jabatan", "actor_unit", "description"]
+    ordering_fields = ["created_at", "action"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        return ActivityLog.objects.select_related("user").all()
 
 
 # ---------------------------------------------------------------------------
@@ -424,6 +485,26 @@ def excel_export_view(request):
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     response["Content-Disposition"] = 'attachment; filename="export_sakti.xlsx"'
+
+    # Audit the export (best-effort; never blocks the download).
+    filt_parts = []
+    if satker_id or kode_satker:
+        filt_parts.append(f"satker={kode_satker or satker_id}")
+    if tahun_anggaran:
+        filt_parts.append(f"tahun={tahun_anggaran}")
+    filt_desc = f" ({', '.join(filt_parts)})" if filt_parts else " (semua data)"
+    log_activity(
+        request,
+        ActivityLog.Action.EXPORT_EXCEL,
+        f"Mengunduh data Excel{filt_desc}",
+        target_type="export",
+        metadata={
+            "satker": kode_satker or satker_id,
+            "tahun_anggaran": tahun_anggaran,
+            "anggaran_rows": anggaran_qs.count(),
+            "realisasi_rows": realisasi_qs.count(),
+        },
+    )
     return response
 
 
