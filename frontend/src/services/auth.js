@@ -9,4 +9,8 @@ export const authService = {
 
   getMe: () =>
     apiClient.get('/auth/me/').then(r => r.data),
+
+  // Public — tells the frontend whether login is required (auth toggle).
+  getConfig: () =>
+    apiClient.get('/auth/config/').then(r => r.data),
 }

@@ -1,6 +1,14 @@
+import { Navigate } from 'react-router-dom'
 import { buildAuthorizationUrl, isSsoEnabled } from '../../utils/oidc'
+import useAuthStore from '../../store/authStore'
 
 export default function LoginPage() {
+  const authDisabled = useAuthStore(s => s.authDisabled)
+  // No-auth (testing) mode: never show login, go straight to the dashboard.
+  if (authDisabled) {
+    return <Navigate to="/overview" replace />
+  }
+
   const handleSsoLogin = () => {
     window.location.href = buildAuthorizationUrl()
   }

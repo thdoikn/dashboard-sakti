@@ -1,4 +1,5 @@
 import axios from 'axios'
+import useAuthStore from '../store/authStore'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
@@ -18,7 +19,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Skip the login redirect in no-auth (testing) mode — there's no login.
+    if (error.response?.status === 401 && !useAuthStore.getState().authDisabled) {
       // Token expired or invalid — clear auth and redirect to login
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
