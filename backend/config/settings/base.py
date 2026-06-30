@@ -174,8 +174,12 @@ if AUTH_DISABLED:
 from datetime import timedelta  # noqa: E402
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=8),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Sessions last at most one day: the SPA has no silent-refresh, so once the
+    # access token expires the next request 401s and the user must sign in via
+    # SSO again. Keeping the refresh token to the same window avoids a longer-
+    # lived credential lingering in the browser.
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
 }
 

@@ -7,6 +7,7 @@ tokens identical in shape to a normal login response.
 """
 
 from django.conf import settings
+from django.contrib.auth.models import update_last_login
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -69,6 +70,11 @@ class OIDCCallbackView(APIView):
             )
         if not user.is_active:
             return Response({"error": "Account is inactive"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Stamp last_login. The OIDC flow is stateless (no django login()), so
+        # without this the user's last_login stays null and the Pengguna page
+        # shows "Belum pernah login" even after a successful SSO sign-in.
+        update_last_login(None, user)
 
         # Record the login in the audit trail (best-effort). request.user is
         # still anonymous at this point, so pass the resolved user explicitly.
