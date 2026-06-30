@@ -1,15 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { bootstrapAuth } from './utils/authBootstrap'
-import Overview from './pages/Overview'
-import SatkerDetail from './pages/SatkerDetail'
-import SatkerManagement from './pages/SatkerManagement'
-import SyncMonitoring from './pages/SyncMonitoring'
-import UserManagement from './pages/UserManagement'
-import LoginPage from './pages/auth/Login'
-import OidcCallbackPage from './pages/auth/OidcCallback'
+import { ToastProvider } from './components/ui/Toast'
+
+// Route-level code splitting: each page is fetched on demand, so the initial
+// bundle no longer carries every screen (and Recharts) up front.
+const Overview         = lazy(() => import('./pages/Overview'))
+const SatkerDetail     = lazy(() => import('./pages/SatkerDetail'))
+const SatkerManagement = lazy(() => import('./pages/SatkerManagement'))
+const SyncMonitoring   = lazy(() => import('./pages/SyncMonitoring'))
+const UserManagement   = lazy(() => import('./pages/UserManagement'))
+const LoginPage        = lazy(() => import('./pages/auth/Login'))
+const OidcCallbackPage = lazy(() => import('./pages/auth/OidcCallback'))
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-ikn-bg">
+      <div className="w-8 h-8 border-4 border-ikn-blue-soft border-t-ikn-blue rounded-full animate-spin" />
+    </div>
+  )
+}
 
 // Internal tool — no application-level auth in v1 per PRD.
 // SSO is now implemented: access restricted via Keycloak + JWT tokens.
@@ -30,7 +42,9 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <ToastProvider>
+      <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -53,6 +67,8 @@ export default function App() {
           <Route path="users"              element={<UserManagement />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </Suspense>
+      </BrowserRouter>
+    </ToastProvider>
   )
 }
