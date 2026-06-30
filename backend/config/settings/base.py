@@ -41,6 +41,7 @@ LOCAL_APPS = [
     "apps.realisasi",
     "apps.capaian",
     "apps.sync_log",
+    "apps.activity_log",
     "apps.api",
     "apps.export",
     "apps.mock_sakti",
