@@ -178,15 +178,15 @@ export default function Sidebar({
               <div className={`flex-1 min-w-0 ${hide}`}>
                 <p className="text-white text-xs font-semibold truncate leading-tight">{user.display_name}</p>
                 <p className="text-white/40 text-[10px] truncate">{user.email}</p>
-                <div className="flex items-center gap-1.5 mt-1">
+                {user.unit_eselon_ii && (
+                  <p className="text-[10px] text-white/30 truncate mt-0.5" title={user.unit_eselon_ii.nama}>
+                    {user.unit_eselon_ii.nama}
+                  </p>
+                )}
+                <div className="flex items-center gap-1.5 mt-1.5">
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-ikn-gold/20 text-ikn-gold uppercase tracking-wide">
                     {ROLE_LABEL[user.role] || user.role}
                   </span>
-                  {user.unit_eselon_ii && (
-                    <span className="text-[9px] text-white/30 truncate max-w-[90px]" title={user.unit_eselon_ii.nama}>
-                      {user.unit_eselon_ii.nama}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function Sidebar({
           <p className="text-white/30 text-[10px] leading-relaxed font-medium">
             Dibangun oleh Direktorat Data dan Kecerdasan Buatan
           </p>
-          <p className="text-white/15 text-[10px] mt-1.5">© 2026 OIKN · v1.0.0</p>
+          <p className="text-white/15 text-[10px] mt-1.5">© 2026 Otorita Ibu Kota Nusantara · v1.0.0</p>
         </div>
       </div>
     </aside>

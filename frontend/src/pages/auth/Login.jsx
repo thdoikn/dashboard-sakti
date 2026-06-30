@@ -76,9 +76,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-white/30 text-[11px] mt-6">
-          © 2026 Otorita Ibu Kota Nusantara · Biro POKS · v1.0.0
-        </p>
+        <div className="text-center mt-6 space-y-1">
+          <p className="text-white/40 text-[11px] font-medium">
+            Dibangun oleh Direktorat Data dan Kecerdasan Buatan
+          </p>
+          <p className="text-white/30 text-[11px]">
+            © 2026 Otorita Ibu Kota Nusantara · Biro POKS · v1.0.0
+          </p>
+        </div>
       </div>
     </div>
   )
