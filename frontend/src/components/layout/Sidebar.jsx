@@ -6,6 +6,7 @@ import {
   BuildingOffice2Icon,
   ServerStackIcon,
   UsersIcon,
+  ClipboardDocumentListIcon,
   ArrowRightStartOnRectangleIcon,
   UserCircleIcon,
   XMarkIcon,
@@ -18,6 +19,7 @@ import {
   BuildingOffice2Icon as BuildingSolid,
   ServerStackIcon as ServerSolid,
   UsersIcon as UsersSolid,
+  ClipboardDocumentListIcon as ClipboardSolid,
 } from '@heroicons/react/24/solid'
 import useAuthStore from '../../store/authStore'
 import { authService } from '../../services/auth'
@@ -27,6 +29,7 @@ const navItems = [
   { to: '/satker-detail',     label: 'Detail Satker',   icon: ChartBarIcon,        iconActive: ChartSolid   },
   { to: '/satker-management', label: 'Kelola Satker',   icon: BuildingOffice2Icon, iconActive: BuildingSolid },
   { to: '/monitoring',        label: 'Monitoring Sync', icon: ServerStackIcon,     iconActive: ServerSolid  },
+  { to: '/activity',          label: 'Log Aktivitas',   icon: ClipboardDocumentListIcon, iconActive: ClipboardSolid },
   { to: '/users',             label: 'Pengguna',        icon: UsersIcon,           iconActive: UsersSolid   },
 ]
 

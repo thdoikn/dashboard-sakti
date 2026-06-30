@@ -11,6 +11,7 @@ const Overview         = lazy(() => import('./pages/Overview'))
 const SatkerDetail     = lazy(() => import('./pages/SatkerDetail'))
 const SatkerManagement = lazy(() => import('./pages/SatkerManagement'))
 const SyncMonitoring   = lazy(() => import('./pages/SyncMonitoring'))
+const ActivityLog      = lazy(() => import('./pages/ActivityLog'))
 const UserManagement   = lazy(() => import('./pages/UserManagement'))
 const LoginPage        = lazy(() => import('./pages/auth/Login'))
 const OidcCallbackPage = lazy(() => import('./pages/auth/OidcCallback'))
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="satker-detail"      element={<SatkerDetail />} />
           <Route path="satker-management"  element={<SatkerManagement />} />
           <Route path="monitoring"         element={<SyncMonitoring />} />
+          <Route path="activity"           element={<ActivityLog />} />
           <Route path="users"              element={<UserManagement />} />
         </Route>
       </Routes>
