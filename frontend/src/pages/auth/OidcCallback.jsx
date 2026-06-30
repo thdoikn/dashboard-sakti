@@ -33,6 +33,14 @@ export default function OidcCallbackPage() {
       })
       .catch(err => {
         const msg = err.response?.data?.error || 'Login SSO gagal. Silakan coba lagi.'
+        // 403 = authenticated with SSO but no recognised role → not authorised.
+        // Route to the dedicated "no access" page instead of a generic error.
+        if (err.response?.status === 403) {
+          sessionStorage.removeItem('oidc_state')
+          sessionStorage.setItem('access_denied_message', msg)
+          window.location.replace('/no-access')
+          return
+        }
         setError(msg)
       })
   }, [])
