@@ -5,6 +5,17 @@ import Sidebar from './Sidebar'
 
 export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  // Desktop collapse state, persisted so it survives reloads.
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem('sidebar_collapsed') === '1'
+  )
+  const toggleCollapse = () => {
+    setCollapsed((c) => {
+      const next = !c
+      localStorage.setItem('sidebar_collapsed', next ? '1' : '0')
+      return next
+    })
+  }
 
   return (
     <div className="flex min-h-screen bg-ikn-bg">
@@ -17,7 +28,12 @@ export default function Layout() {
         />
       )}
 
-      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapse={toggleCollapse}
+      />
 
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Mobile top bar — only visible below lg, where the sidebar is hidden */}
