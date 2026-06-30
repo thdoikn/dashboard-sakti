@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import {
   BanknotesIcon,
   ArrowTrendingUpIcon,
@@ -9,8 +9,11 @@ import { getAnggaran, getRealisasi } from '../api/anggaran'
 import StatCard from '../components/StatCard'
 import SyncStatus from '../components/SyncStatus'
 import ExportButton from '../components/ExportButton'
-import DisbursementChart from '../components/charts/DisbursementChart'
 import AbsorptionGauge from '../components/charts/AbsorptionGauge'
+import { StatCardSkeleton, ChartSkeleton } from '../components/ui/Skeleton'
+
+// Recharts is heavy — defer it so the dashboard shell paints first.
+const DisbursementChart = lazy(() => import('../components/charts/DisbursementChart'))
 
 const formatIDR = (val) =>
   new Intl.NumberFormat('id-ID', {
@@ -68,7 +71,7 @@ export default function Overview() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
@@ -89,7 +92,7 @@ export default function Overview() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-8 py-6 space-y-6">
+      <div className="flex-1 px-4 sm:px-8 py-6 space-y-6">
 
         {/* Year filter row */}
         <div className="flex items-center gap-2">
@@ -112,27 +115,37 @@ export default function Overview() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            title="Total Anggaran"
-            value={loading ? '—' : formatIDR(totalAnggaran)}
-            subtitle="Seluruh satker aktif"
-            color="blue"
-            icon={BanknotesIcon}
-          />
-          <StatCard
-            title="Total Realisasi"
-            value={loading ? '—' : formatIDR(totalRealisasi)}
-            subtitle="SP2D diterbitkan"
-            color="green"
-            icon={ArrowTrendingUpIcon}
-          />
-          <StatCard
-            title="Serapan Anggaran"
-            value={loading ? '—' : `${persen.toFixed(1)}%`}
-            subtitle="Realisasi ÷ Anggaran"
-            color="gold"
-            icon={ChartPieIcon}
-          />
+          {loading ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Total Anggaran"
+                value={formatIDR(totalAnggaran)}
+                subtitle="Seluruh satker aktif"
+                color="blue"
+                icon={BanknotesIcon}
+              />
+              <StatCard
+                title="Total Realisasi"
+                value={formatIDR(totalRealisasi)}
+                subtitle="SP2D diterbitkan"
+                color="green"
+                icon={ArrowTrendingUpIcon}
+              />
+              <StatCard
+                title="Serapan Anggaran"
+                value={`${persen.toFixed(1)}%`}
+                subtitle="Realisasi ÷ Anggaran"
+                color="gold"
+                icon={ChartPieIcon}
+              />
+            </>
+          )}
         </div>
 
         {/* Chart section */}
@@ -164,14 +177,11 @@ export default function Overview() {
               </div>
             </div>
             {loading ? (
-              <div className="h-64 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-gray-300">
-                  <div className="w-8 h-8 border-2 border-ikn-blue-soft border-t-ikn-blue rounded-full animate-spin" />
-                  <span className="text-sm">Memuat data...</span>
-                </div>
-              </div>
+              <ChartSkeleton height={300} />
             ) : (
-              <DisbursementChart data={chartData} />
+              <Suspense fallback={<ChartSkeleton height={300} />}>
+                <DisbursementChart data={chartData} />
+              </Suspense>
             )}
           </div>
 

@@ -227,7 +227,7 @@ export default function SyncMonitoring() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
@@ -253,7 +253,7 @@ export default function SyncMonitoring() {
         </div>
       </div>
 
-      <div className="flex-1 px-8 py-6 space-y-6">
+      <div className="flex-1 px-4 sm:px-8 py-6 space-y-6">
 
         {/* Health banner */}
         <div className={`ikn-card border p-5 ${bannerCfg.bannerBg}`}>

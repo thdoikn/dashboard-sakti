@@ -3,9 +3,11 @@ import {
   UserCircleIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline'
 import { ShieldCheckIcon } from '@heroicons/react/24/solid'
 import apiClient from '../api/client'
+import { TableSkeleton } from '../components/ui/Skeleton'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -15,8 +17,8 @@ const ROLE_LABEL = {
 }
 
 const ROLE_COLOR = {
-  superadmin: 'bg-red-100 text-red-700',
-  staff:      'bg-blue-100 text-blue-700',
+  superadmin: 'bg-ikn-red-light text-ikn-red-dark',
+  staff:      'bg-ikn-blue-light text-ikn-blue',
 }
 
 const JENIS_LABEL = {
@@ -49,8 +51,8 @@ function timeAgo(iso) {
 
 function RoleBadge({ role }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLOR[role] || ROLE_COLOR.viewer}`}>
-      {role === 'admin' && <ShieldCheckIcon className="w-3 h-3" />}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${ROLE_COLOR[role] || 'bg-gray-100 text-gray-500'}`}>
+      {role === 'superadmin' && <ShieldCheckIcon className="w-3.5 h-3.5" />}
       {ROLE_LABEL[role] || role}
     </span>
   )
@@ -59,24 +61,24 @@ function RoleBadge({ role }) {
 function UserRow({ user }) {
   const ago = timeAgo(user.last_login)
   return (
-    <tr className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="py-3 px-4">
+    <tr className="border-t border-gray-100 hover:bg-ikn-blue-light/30 transition-colors">
+      <td className="ikn-table-td">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-ikn-green/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-ikn-green-light flex items-center justify-center flex-shrink-0">
             <UserCircleIcon className="w-6 h-6 text-ikn-green" />
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 leading-tight">{user.display_name}</p>
-            <p className="text-xs text-gray-400">{user.email}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ikn-dark leading-tight truncate">{user.display_name}</p>
+            <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
         </div>
       </td>
-      <td className="py-3 px-4">
+      <td className="ikn-table-td">
         <RoleBadge role={user.role} />
       </td>
-      <td className="py-3 px-4 hidden md:table-cell">
+      <td className="ikn-table-td hidden md:table-cell">
         <div className="text-sm text-gray-700 leading-tight">
-          {user.unit_eselon_ii?.nama || <span className="text-gray-400">—</span>}
+          {user.unit_eselon_ii?.nama || <span className="text-gray-300">—</span>}
         </div>
         {user.unit_eselon_i && (
           <div className="text-xs text-gray-400 mt-0.5">
@@ -84,11 +86,11 @@ function UserRow({ user }) {
           </div>
         )}
       </td>
-      <td className="py-3 px-4 hidden lg:table-cell">
-        <p className="text-xs text-gray-500">{user.jabatan || <span className="text-gray-300">—</span>}</p>
+      <td className="ikn-table-td hidden lg:table-cell">
+        <p className="text-xs text-gray-600">{user.jabatan || <span className="text-gray-300">—</span>}</p>
         {user.nip && <p className="text-xs text-gray-400 mt-0.5">NIP {user.nip}</p>}
       </td>
-      <td className="py-3 px-4 text-right">
+      <td className="ikn-table-td text-right">
         <p className="text-xs text-gray-700">{fmtDate(user.last_login)}</p>
         {ago && <p className="text-xs text-gray-400 mt-0.5">{ago}</p>}
       </td>
@@ -134,90 +136,101 @@ export default function UserManagement() {
   ].filter(g => g.users.length > 0)
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Manajemen Pengguna</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {loading ? 'Memuat…' : `${users.length} pengguna terdaftar`}
-          </p>
-        </div>
-        <button
-          onClick={fetchUsers}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-        >
-          <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="relative mb-5">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Cari nama, email, direktorat, jabatan, NIP…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ikn-green/30 bg-white"
-        />
-      </div>
-
-      {/* Error state */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700 mb-4">
-          {error}
-        </div>
-      )}
-
-      {/* Loading skeleton */}
-      {loading && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 border-t border-gray-100 first:border-t-0">
-              <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-1/3" />
-                <div className="h-2 bg-gray-100 rounded animate-pulse w-1/4" />
-              </div>
+    <div className="flex flex-col min-h-screen">
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
+              <span className="text-ikn-blue font-semibold">SAKTI</span>
+              <span>/</span>
+              <span>Pengguna</span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* User groups */}
-      {!loading && groups.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-sm text-gray-400">
-          {search ? 'Tidak ada pengguna yang cocok dengan pencarian.' : 'Belum ada pengguna terdaftar.'}
-        </div>
-      )}
-
-      {!loading && groups.map(group => (
-        <div key={group.key} className="mb-5">
-          <div className="flex items-center gap-2 mb-2">
-            <RoleBadge role={group.key} />
-            <span className="text-xs text-gray-400">{group.users.length} pengguna</span>
+            <h1 className="text-xl font-extrabold text-ikn-dark leading-tight">Manajemen Pengguna</h1>
+            <p className="text-xs text-gray-400 mt-1">
+              {loading ? 'Memuat…' : `${users.length} pengguna terdaftar via SSO OIKN`}
+            </p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="py-2 px-4 text-xs font-medium text-gray-500">Pengguna</th>
-                  <th className="py-2 px-4 text-xs font-medium text-gray-500">Role</th>
-                  <th className="py-2 px-4 text-xs font-medium text-gray-500 hidden md:table-cell">Unit Organisasi</th>
-                  <th className="py-2 px-4 text-xs font-medium text-gray-500 hidden lg:table-cell">Jabatan / NIP</th>
-                  <th className="py-2 px-4 text-xs font-medium text-gray-500 text-right">Login Terakhir</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.users.map(u => <UserRow key={u.id} user={u} />)}
-              </tbody>
-            </table>
-          </div>
+          <button
+            onClick={fetchUsers}
+            disabled={loading}
+            className="ikn-btn-secondary disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
         </div>
-      ))}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 px-4 sm:px-8 py-6 space-y-5">
+        {/* Search */}
+        <div className="relative max-w-md">
+          <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Cari nama, email, unit, jabatan, NIP…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="ikn-input pl-10"
+          />
+        </div>
+
+        {/* Error state */}
+        {error && (
+          <div className="ikn-card border border-red-200 bg-ikn-red-light p-4 text-sm text-ikn-red-dark">
+            {error}
+          </div>
+        )}
+
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="ikn-card overflow-hidden">
+            <TableSkeleton rows={6} cols={5} />
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && groups.length === 0 && (
+          <div className="ikn-card p-12 text-center">
+            <div className="flex flex-col items-center gap-3 text-gray-300">
+              <UsersIcon className="w-12 h-12 opacity-40" />
+              <p className="text-sm text-gray-400 font-medium">
+                {search ? 'Tidak ada pengguna yang cocok dengan pencarian.' : 'Belum ada pengguna terdaftar.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* User groups */}
+        {!loading && groups.map(group => (
+          <div key={group.key} className="ikn-card overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+              <div className="w-1 h-5 rounded-full bg-ikn-blue" />
+              <h3 className="font-bold text-ikn-dark text-sm">{group.label}</h3>
+              <span className="ml-1 px-2 py-0.5 bg-ikn-blue-light text-ikn-blue text-xs font-bold rounded-full">
+                {group.users.length}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-ikn-bg/60">
+                    <th className="ikn-table-th">Pengguna</th>
+                    <th className="ikn-table-th">Role</th>
+                    <th className="ikn-table-th hidden md:table-cell">Unit Organisasi</th>
+                    <th className="ikn-table-th hidden lg:table-cell">Jabatan / NIP</th>
+                    <th className="ikn-table-th text-right">Login Terakhir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.users.map(u => <UserRow key={u.id} user={u} />)}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

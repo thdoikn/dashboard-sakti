@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { exportExcel } from '../api/anggaran'
+import { useToast } from './ui/Toast'
 
 export default function ExportButton({ params = {}, label = 'Unduh Excel', className = '' }) {
+  const toast = useToast()
   const [exporting, setExporting] = useState(false)
 
   const handleExport = async () => {
@@ -16,8 +18,9 @@ export default function ExportButton({ params = {}, label = 'Unduh Excel', class
       a.download = 'export_sakti.xlsx'
       a.click()
       URL.revokeObjectURL(url)
+      toast.success('File Excel berhasil diunduh.')
     } catch {
-      alert('Gagal mengunduh file export.')
+      toast.error('Gagal mengunduh file export. Coba lagi.')
     } finally {
       setExporting(false)
     }

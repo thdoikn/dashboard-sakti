@@ -1,15 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import {
   BanknotesIcon,
   ArrowTrendingUpIcon,
   ChartPieIcon,
   FunnelIcon,
+  FlagIcon,
 } from '@heroicons/react/24/outline'
 import { getSatkerList } from '../api/satker'
 import { getAnggaran, getRealisasi, getCapaianRO } from '../api/anggaran'
 import ExportButton from '../components/ExportButton'
-import DisbursementChart from '../components/charts/DisbursementChart'
 import AbsorptionGauge from '../components/charts/AbsorptionGauge'
+import { ChartSkeleton } from '../components/ui/Skeleton'
+
+// Recharts is heavy — defer it so the page shell paints first.
+const DisbursementChart = lazy(() => import('../components/charts/DisbursementChart'))
+
+const progressColor = (pct) => {
+  if (pct >= 80) return { bar: 'bg-ikn-green', text: 'text-ikn-green-dark' }
+  if (pct >= 50) return { bar: 'bg-ikn-blue',  text: 'text-ikn-blue' }
+  if (pct >= 25) return { bar: 'bg-ikn-gold',  text: 'text-ikn-gold-dark' }
+  return { bar: 'bg-ikn-red', text: 'text-ikn-red-dark' }
+}
 
 const formatIDR = (val) =>
   new Intl.NumberFormat('id-ID', {
@@ -83,7 +94,7 @@ export default function SatkerDetail() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
@@ -98,7 +109,7 @@ export default function SatkerDetail() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border-b border-gray-100 px-8 py-3.5">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-3.5">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
             <FunnelIcon className="w-3.5 h-3.5" />
@@ -134,7 +145,7 @@ export default function SatkerDetail() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-8 py-6 space-y-6">
+      <div className="flex-1 px-4 sm:px-8 py-6 space-y-6">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-3 text-gray-300">
@@ -190,7 +201,9 @@ export default function SatkerDetail() {
                     ))}
                   </div>
                 </div>
-                <DisbursementChart data={chartData} />
+                <Suspense fallback={<ChartSkeleton height={300} />}>
+                  <DisbursementChart data={chartData} />
+                </Suspense>
               </div>
               <div className="ikn-card p-6 flex items-center justify-center">
                 <AbsorptionGauge percentage={persen} />
@@ -248,6 +261,75 @@ export default function SatkerDetail() {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Capaian Output (RO) — performance achievement per sub-output */}
+            <div className="ikn-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div className="w-1 h-5 rounded-full bg-ikn-green" />
+                <h3 className="font-bold text-ikn-dark text-sm">Capaian Output (RO)</h3>
+                {capaian.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 bg-ikn-green-light text-ikn-green-dark text-xs font-bold rounded-full">
+                    {capaian.length}
+                  </span>
+                )}
+                <span className="ml-auto text-xs text-gray-400 hidden sm:inline">Progress fisik vs. realisasi belanja</span>
+              </div>
+
+              {capaian.length === 0 ? (
+                <div className="px-6 py-12 text-center text-gray-300">
+                  <div className="flex flex-col items-center gap-2">
+                    <FlagIcon className="w-10 h-10 opacity-30" />
+                    <span className="text-sm">Belum ada data capaian output</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-ikn-bg/60">
+                        <th className="ikn-table-th">Sub-Output (RO)</th>
+                        <th className="ikn-table-th">Periode</th>
+                        <th className="ikn-table-th w-56">Progress Capaian</th>
+                        <th className="ikn-table-th text-right">Realisasi Belanja</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {capaian.slice(0, 30).map((c, i) => {
+                        const pct = Math.min(100, Math.max(0, parseFloat(c.total_progress_capaian_ro ?? 0)))
+                        const { bar, text } = progressColor(pct)
+                        return (
+                          <tr key={c.id ?? i}
+                            className={`border-t border-gray-100 hover:bg-ikn-green-light/30 transition-colors ${
+                              i % 2 === 0 ? '' : 'bg-gray-50/40'
+                            }`}
+                          >
+                            <td className="ikn-table-td">
+                              <code className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                                {c.sub_output_kode}
+                              </code>
+                            </td>
+                            <td className="ikn-table-td text-gray-500">{c.kode_periode}</td>
+                            <td className="ikn-table-td">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden min-w-[80px]">
+                                  <div className={`h-full rounded-full transition-all duration-500 ${bar}`} style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className={`text-xs font-bold tabular-nums w-12 text-right ${text}`}>
+                                  {pct.toFixed(1)}%
+                                </span>
+                              </div>
+                            </td>
+                            <td className="ikn-table-td text-right font-semibold text-ikn-green-dark">
+                              {formatIDRFull(c.realisasi_belanja)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -7,18 +7,25 @@ import {
   BuildingOffice2Icon,
 } from '@heroicons/react/24/outline'
 import { getSatkerList, createSatker, updateSatker, deleteSatker } from '../api/satker'
+import { useToast } from '../components/ui/Toast'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
+import { TableSkeleton } from '../components/ui/Skeleton'
 
 const emptyForm = {
   kode_satker: '', nama_satker: '', kode_kementerian: '999', kode_kppn: '', aktif: true,
 }
 
 export default function SatkerManagement() {
+  const toast = useToast()
   const [satkerList, setSatkerList] = useState([])
   const [form,       setForm]       = useState(emptyForm)
   const [editId,     setEditId]     = useState(null)
   const [showForm,   setShowForm]   = useState(false)
   const [loading,    setLoading]    = useState(false)
   const [listLoading,setListLoading]= useState(true)
+  // Deactivation confirm dialog state
+  const [confirmTarget, setConfirmTarget] = useState(null)
+  const [confirmBusy,   setConfirmBusy]   = useState(false)
 
   const load = () => {
     setListLoading(true)
@@ -41,15 +48,17 @@ export default function SatkerManagement() {
     try {
       if (editId) {
         await updateSatker(editId, form)
+        toast.success(`Satker "${form.nama_satker}" berhasil diperbarui.`)
       } else {
         await createSatker(form)
+        toast.success(`Satker "${form.nama_satker}" berhasil ditambahkan.`)
       }
       setShowForm(false)
       setForm(emptyForm)
       setEditId(null)
       await load()
     } catch {
-      alert('Gagal menyimpan data satker.')
+      toast.error('Gagal menyimpan data satker. Periksa kembali isian Anda.')
     } finally {
       setLoading(false)
     }
@@ -67,11 +76,19 @@ export default function SatkerManagement() {
     setShowForm(true)
   }
 
-  const handleDeactivate = async (id) => {
-    if (!confirm('Nonaktifkan satker ini?')) return
-    const satker = satkerList.find((s) => s.id === id)
-    await updateSatker(id, { ...satker, aktif: false })
-    await load()
+  const confirmDeactivate = async () => {
+    if (!confirmTarget) return
+    setConfirmBusy(true)
+    try {
+      await updateSatker(confirmTarget.id, { ...confirmTarget, aktif: false })
+      toast.success(`Satker "${confirmTarget.nama_satker}" dinonaktifkan.`)
+      await load()
+      setConfirmTarget(null)
+    } catch {
+      toast.error('Gagal menonaktifkan satker.')
+    } finally {
+      setConfirmBusy(false)
+    }
   }
 
   const Field = ({ label, children }) => (
@@ -84,7 +101,7 @@ export default function SatkerManagement() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-1">
@@ -104,7 +121,7 @@ export default function SatkerManagement() {
       {/* Slide-down form panel */}
       {showForm && (
         <div className="bg-white border-b border-gray-100 shadow-sm">
-          <div className="px-8 py-6 max-w-3xl">
+          <div className="px-4 sm:px-8 py-6 max-w-3xl">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-ikn-blue-light flex items-center justify-center">
@@ -126,7 +143,7 @@ export default function SatkerManagement() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Kode Satker">
                 <input
                   required
@@ -170,22 +187,27 @@ export default function SatkerManagement() {
                 />
               </Field>
 
-              <div className="col-span-2 flex items-center justify-between pt-2">
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <div
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-3 select-none">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.aktif}
+                    aria-label="Status aktif satker"
                     onClick={() => setForm({ ...form, aktif: !form.aktif })}
-                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer
+                                focus:outline-none focus:ring-2 focus:ring-ikn-blue/30 focus:ring-offset-1 ${
                       form.aktif ? 'bg-ikn-green' : 'bg-gray-300'
                     }`}
                   >
                     <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
                       form.aktif ? 'translate-x-5' : 'translate-x-0'
                     }`} />
-                  </div>
+                  </button>
                   <span className="text-sm font-medium text-gray-700">
                     {form.aktif ? 'Satker Aktif' : 'Satker Nonaktif'}
                   </span>
-                </label>
+                </div>
 
                 <div className="flex gap-2">
                   <button
@@ -217,7 +239,7 @@ export default function SatkerManagement() {
       )}
 
       {/* Content */}
-      <div className="flex-1 px-8 py-6">
+      <div className="flex-1 px-4 sm:px-8 py-6">
         <div className="ikn-card overflow-hidden">
           {/* Table header */}
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -242,12 +264,7 @@ export default function SatkerManagement() {
           </div>
 
           {listLoading ? (
-            <div className="flex items-center justify-center py-16 text-gray-300">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-2 border-ikn-blue-soft border-t-ikn-blue rounded-full animate-spin" />
-                <span className="text-sm text-gray-400">Memuat...</span>
-              </div>
-            </div>
+            <TableSkeleton rows={6} cols={6} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -313,7 +330,7 @@ export default function SatkerManagement() {
                           </button>
                           {s.aktif && (
                             <button
-                              onClick={() => handleDeactivate(s.id)}
+                              onClick={() => setConfirmTarget(s)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-ikn-red-dark
                                          bg-ikn-red-light rounded-lg hover:bg-red-100 transition-colors"
                             >
@@ -344,6 +361,20 @@ export default function SatkerManagement() {
           )}
         </div>
       </div>
+
+      {/* Deactivation confirm dialog */}
+      <ConfirmDialog
+        open={!!confirmTarget}
+        title="Nonaktifkan Satker?"
+        message={confirmTarget
+          ? `Satker "${confirmTarget.nama_satker}" tidak akan lagi disertakan dalam sinkronisasi dan agregasi dashboard. Anda dapat mengaktifkannya kembali kapan saja.`
+          : ''}
+        confirmLabel="Nonaktifkan"
+        tone="danger"
+        loading={confirmBusy}
+        onConfirm={confirmDeactivate}
+        onCancel={() => setConfirmTarget(null)}
+      />
     </div>
   )
 }
