@@ -50,3 +50,11 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
+
+# ── Safety: auth can NEVER be disabled under production settings ───────────────
+# Even if AUTH_DISABLED=true is set in the environment, production always enforces
+# authentication. Use DJANGO_SETTINGS_MODULE=config.settings.testing for no-auth QA.
+AUTH_DISABLED = False
+REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = [  # noqa: F405
+    "rest_framework.permissions.IsAuthenticated",
+]

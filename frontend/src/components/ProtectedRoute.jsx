@@ -7,8 +7,10 @@ import useAuthStore from '../store/authStore'
  * 401 responses and clears the store when the token is expired.
  */
 export default function ProtectedRoute({ children }) {
-  const accessToken = useAuthStore(s => s.accessToken)
-  if (!accessToken) {
+  const accessToken  = useAuthStore(s => s.accessToken)
+  const authDisabled = useAuthStore(s => s.authDisabled)
+  // authDisabled = backend testing mode (no login required).
+  if (!accessToken && !authDisabled) {
     return <Navigate to="/login" replace />
   }
   return children

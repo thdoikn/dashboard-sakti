@@ -79,12 +79,50 @@ class OIDCCallbackView(APIView):
 
 
 class CurrentUserView(APIView):
-    """GET /api/auth/me/ — returns the currently authenticated user's profile."""
+    """GET /api/auth/me/ — returns the current user's profile.
 
-    permission_classes = [permissions.IsAuthenticated]
+    When AUTH_DISABLED (testing mode) and there is no real session, returns a
+    synthetic superadmin profile so the SPA renders fully without login.
+    """
+
+    def get_permissions(self):
+        if getattr(settings, "AUTH_DISABLED", False):
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get(self, request):
+        if getattr(settings, "AUTH_DISABLED", False) and not request.user.is_authenticated:
+            return Response(_mock_user())
         return Response(_serialize_user(request.user))
+
+
+class AuthConfigView(APIView):
+    """GET /api/auth/config/ — public; tells the frontend whether login is required."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({"auth_enabled": not getattr(settings, "AUTH_DISABLED", False)})
+
+
+def _mock_user() -> dict:
+    """Synthetic profile returned in AUTH_DISABLED testing mode (no real session)."""
+    return {
+        "id":            0,
+        "username":      "tester",
+        "email":         "tester@example.local",
+        "first_name":    "Test",
+        "last_name":     "User",
+        "display_name":  "Test User (No Auth)",
+        "role":          "superadmin",
+        "nip":           "",
+        "jabatan":       "",
+        "unit_eselon_i":  None,
+        "unit_eselon_ii": None,
+        "last_login":    None,
+        "date_joined":   "2026-01-01T00:00:00+00:00",
+        "is_active":     True,
+    }
 
 
 def _serialize_user(user) -> dict:

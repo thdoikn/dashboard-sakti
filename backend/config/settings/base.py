@@ -157,6 +157,18 @@ REST_FRAMEWORK = {
     ],
 }
 
+# ── Auth toggle (TESTING ONLY) ────────────────────────────────────────────────
+# AUTH_DISABLED=true opens the whole API (AllowAny) and makes the frontend
+# auto-land on the dashboard with a mock user — for QA without SSO.
+# SAFETY: production.py force-disables this, so it can only take effect under a
+# non-production settings module (use config.settings.testing for no-auth QA).
+AUTH_DISABLED = os.environ.get("AUTH_DISABLED", "false").lower() == "true"
+
+if AUTH_DISABLED:
+    REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = [
+        "rest_framework.permissions.AllowAny",
+    ]
+
 # ── SimpleJWT ─────────────────────────────────────────────────────────────────
 from datetime import timedelta  # noqa: E402
 
