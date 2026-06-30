@@ -15,6 +15,7 @@ const ActivityLog      = lazy(() => import('./pages/ActivityLog'))
 const UserManagement   = lazy(() => import('./pages/UserManagement'))
 const LoginPage        = lazy(() => import('./pages/auth/Login'))
 const OidcCallbackPage = lazy(() => import('./pages/auth/OidcCallback'))
+const NoAccessPage     = lazy(() => import('./pages/auth/NoAccess'))
 
 function PageLoader() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<OidcCallbackPage />} />
+        <Route path="/no-access" element={<NoAccessPage />} />
 
         {/* Protected routes — redirect to /login if no JWT token */}
         <Route
